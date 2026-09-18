@@ -1,4 +1,9 @@
-<div class="page-band"><div class="section-wrap"><a routerLink="/" class="breadcrumb">← All elections</a><span class="band-kicker">THE OUTCOME</span></div></div>
+<div class="page-band">
+  <div class="section-wrap">
+    <a routerLink="/" class="breadcrumb">← All elections</a
+    ><span class="band-kicker">THE OUTCOME</span>
+  </div>
+</div>
 <section class="results-page section-wrap">
   @if (loading()) {
     <div class="state-card">Loading results…</div>
@@ -6,18 +11,60 @@
     <div class="state-card state-error" role="alert">{{ error() }}</div>
   } @else if (election(); as current) {
     @if (results(); as tally) {
-      <div class="results-heading"><p class="eyebrow">Election results / {{ current.id }}</p><h1>Every voice made<br>a difference<span class="heading-dot">.</span></h1><p>Voting has closed for <strong>{{ current.title }}</strong>. Here's how the community voted.</p></div>
+      <div class="results-heading">
+        <p class="eyebrow">Election results / {{ current.id }}</p>
+        <h1>Every voice made<br />a difference<span class="heading-dot">.</span></h1>
+        <p>
+          Voting has closed for <strong>{{ current.title }}</strong
+          >. Here's how the community voted.
+        </p>
+      </div>
       <div class="results-layout">
-        <div class="results-card"><div class="results-card-heading"><h2>The results</h2><span>{{ tally.total_votes }} {{ tally.total_votes === 1 ? 'vote' : 'votes' }} counted</span></div>
+        <div class="results-card">
+          <div class="results-card-heading">
+            <h2>The results</h2>
+            <span
+              >{{ tally.total_votes }}
+              {{ tally.total_votes === 1 ? 'vote' : 'votes' }} counted</span
+            >
+          </div>
           @for (candidate of tally.candidates; track candidate.candidate_id) {
-            <div class="result-item"><div class="result-row"><strong>{{ candidate.name }}</strong><span>{{ candidate.votes }} {{ candidate.votes === 1 ? 'vote' : 'votes' }} <b>{{ percentage(candidate.votes, tally.total_votes) }}%</b></span></div><div class="result-track"><div [style.width.%]="percentage(candidate.votes, tally.total_votes)"></div></div></div>
+            <div class="result-item">
+              <div class="result-row">
+                <strong>{{ candidate.name }}</strong
+                ><span
+                  >{{ candidate.votes }} {{ candidate.votes === 1 ? 'vote' : 'votes' }}
+                  <b>{{ percentage(candidate.votes, tally.total_votes) }}%</b></span
+                >
+              </div>
+              <div class="result-track">
+                <div [style.width.%]="percentage(candidate.votes, tally.total_votes)"></div>
+              </div>
+            </div>
           }
-          @if (!tally.candidates.length) { <p>No candidates were listed for this election.</p> }
+          @if (!tally.candidates.length) {
+            <p>No candidates were listed for this election.</p>
+          }
         </div>
-        <aside class="results-aside"><div class="result-big-number">{{ tally.total_votes }}</div><h3>voices counted.</h3><p>Thank you for showing up and taking part in your community's future.</p><a routerLink="/" class="button button-dark">Explore other elections ↗</a></aside>
+        <aside class="results-aside">
+          <div class="result-big-number">{{ tally.total_votes }}</div>
+          <h3>voices counted.</h3>
+          <p>Thank you for showing up and taking part in your community's future.</p>
+          <a routerLink="/" class="button button-dark">Explore other elections ↗</a>
+        </aside>
       </div>
     } @else {
-      <div class="notice-card"><div class="notice-icon">◷</div><div><h2>Results are not available yet.</h2><p>Come back when {{ current.title }} closes. The totals will appear here after voting ends.</p><a [routerLink]="['/elections', current.id]" class="text-link">View election →</a></div></div>
+      <div class="notice-card">
+        <div class="notice-icon">◷</div>
+        <div>
+          <h2>Results are not available yet.</h2>
+          <p>
+            Come back when {{ current.title }} closes. The totals will appear here after voting
+            ends.
+          </p>
+          <a [routerLink]="['/elections', current.id]" class="text-link">View election →</a>
+        </div>
+      </div>
     }
   }
 </section>

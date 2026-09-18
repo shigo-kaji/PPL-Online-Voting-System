@@ -24,9 +24,15 @@ export class ApiService {
 
   async login(username: string, password: string): Promise<void> {
     await this.refreshCsrf();
-    await firstValueFrom(this.http.post('/api/auth/login/', { username, password }, {
-      headers: this.csrfHeaders(),
-    }));
+    await firstValueFrom(
+      this.http.post(
+        '/api/auth/login/',
+        { username, password },
+        {
+          headers: this.csrfHeaders(),
+        },
+      ),
+    );
     // Django rotates its CSRF token on login.
     await this.refreshCsrf();
     await this.refreshSession();
@@ -49,9 +55,15 @@ export class ApiService {
 
   async castVote(electionId: number, candidateId: number): Promise<void> {
     await this.refreshCsrf();
-    await firstValueFrom(this.http.post(`/api/elections/${electionId}/vote/`, {
-      candidate_id: candidateId,
-    }, { headers: this.csrfHeaders() }));
+    await firstValueFrom(
+      this.http.post(
+        `/api/elections/${electionId}/vote/`,
+        {
+          candidate_id: candidateId,
+        },
+        { headers: this.csrfHeaders() },
+      ),
+    );
   }
 
   getResults(id: number): Promise<ElectionResults> {
@@ -65,7 +77,8 @@ export class ApiService {
 
 export function readableError(error: unknown): string {
   if (error instanceof HttpErrorResponse) {
-    if (error.status === 0) return 'We could not reach the voting server. Please try again shortly.';
+    if (error.status === 0)
+      return 'We could not reach the voting server. Please try again shortly.';
     const body: unknown = error.error;
     if (body && typeof body === 'object') {
       const details = body as Record<string, unknown>;

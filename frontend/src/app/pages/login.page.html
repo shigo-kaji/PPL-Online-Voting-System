@@ -1,10 +1,17 @@
 <section class="login-page section-wrap">
   <div class="login-story">
     <p class="eyebrow"><span class="eyebrow-line"></span> Your community, your call</p>
-    <h1>Every voice<br>has a place <em>here.</em></h1>
-    <p>Sign in with your voter account to take part in an election. Your choice is submitted once, with a clear confirmation.</p>
-    <div class="login-quote"><span>“</span><p>The future is something we choose together.</p></div>
-    <div class="login-orbit orbit-a"></div><div class="login-orbit orbit-b"></div>
+    <h1>Every voice<br />has a place <em>here.</em></h1>
+    <p>
+      Sign in with your voter account to take part in an election. Your choice is submitted once,
+      with a clear confirmation.
+    </p>
+    <div class="login-quote">
+      <span>“</span>
+      <p>The future is something we choose together.</p>
+    </div>
+    <div class="login-orbit orbit-a"></div>
+    <div class="login-orbit orbit-b"></div>
   </div>
   <div class="login-panel">
     <div class="login-panel-top"><span class="panel-icon">✳</span><span>VOTER ACCESS</span></div>
@@ -12,15 +19,40 @@
     <p class="panel-intro">Enter the account provided by your election administrator.</p>
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label for="username">Username</label>
-      <input id="username" type="text" formControlName="username" autocomplete="username" placeholder="Your username" [attr.aria-invalid]="form.controls.username.invalid && form.controls.username.touched" />
-      @if (form.controls.username.invalid && form.controls.username.touched) { <small class="field-error">Enter your username.</small> }
+      <input
+        id="username"
+        type="text"
+        formControlName="username"
+        autocomplete="username"
+        placeholder="Your username"
+        [attr.aria-invalid]="form.controls.username.invalid && form.controls.username.touched"
+      />
+      @if (form.controls.username.invalid && form.controls.username.touched) {
+        <small class="field-error">Enter your username.</small>
+      }
       <label for="password">Password</label>
-      <input id="password" type="password" formControlName="password" autocomplete="current-password" placeholder="Your password" [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched" />
-      @if (form.controls.password.invalid && form.controls.password.touched) { <small class="field-error">Enter your password.</small> }
-      @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
-      <button class="button button-primary button-full" type="submit" [disabled]="submitting()">{{ submitting() ? 'Signing in…' : 'Continue to elections' }} <span aria-hidden="true">↗</span></button>
+      <input
+        id="password"
+        type="password"
+        formControlName="password"
+        autocomplete="current-password"
+        placeholder="Your password"
+        [attr.aria-invalid]="form.controls.password.invalid && form.controls.password.touched"
+      />
+      @if (form.controls.password.invalid && form.controls.password.touched) {
+        <small class="field-error">Enter your password.</small>
+      }
+      @if (error()) {
+        <div class="form-error" role="alert">{{ error() }}</div>
+      }
+      <button class="button button-primary button-full" type="submit" [disabled]="submitting()">
+        {{ submitting() ? 'Signing in…' : 'Continue to elections' }}
+        <span aria-hidden="true">↗</span>
+      </button>
     </form>
-    <div class="form-footnote"><span>▣</span> Your account is managed by the election administrator.</div>
+    <div class="form-footnote">
+      <span>▣</span> Your account is managed by the election administrator.
+    </div>
     <a routerLink="/" class="back-link">← Back to home</a>
   </div>
 </section>

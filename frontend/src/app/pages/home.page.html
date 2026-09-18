@@ -2,38 +2,59 @@
   <div class="hero-copy">
     <p class="eyebrow"><span class="eyebrow-line"></span> A better way to choose together</p>
     <h1>Make your voice <em>count.</em></h1>
-    <p class="hero-lead">A simple, trusted space to take part in the decisions shaping your community. Explore current elections, meet the candidates, and cast your vote with confidence.</p>
+    <p class="hero-lead">
+      A simple, trusted space to take part in the decisions shaping your community. Explore current
+      elections, meet the candidates, and cast your vote with confidence.
+    </p>
     <div class="hero-actions">
       @if (api.currentUser()?.authenticated) {
-        <a href="#elections" class="button button-primary">Explore elections <span aria-hidden="true">↗</span></a>
+        <a href="#elections" class="button button-primary"
+          >Explore elections <span aria-hidden="true">↗</span></a
+        >
       } @else {
-        <a routerLink="/login" class="button button-primary">Sign in to vote <span aria-hidden="true">↗</span></a>
+        <a routerLink="/login" class="button button-primary"
+          >Sign in to vote <span aria-hidden="true">↗</span></a
+        >
       }
       <a href="#how-it-works" class="button button-outline">How it works</a>
     </div>
-    <div class="hero-note"><span class="hero-note-icon">✓</span> One ballot per voter account, every time.</div>
+    <div class="hero-note">
+      <span class="hero-note-icon">✓</span> One ballot per voter account, every time.
+    </div>
   </div>
   <div class="hero-art" aria-hidden="true">
-    <div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
+    <div class="art-orbit orbit-one"></div>
+    <div class="art-orbit orbit-two"></div>
     <div class="art-grid"></div>
     <div class="floating-label label-top"><span class="label-icon">✓</span> Your vote is in</div>
     <div class="ballot-illustration">
-      <div class="ballot-heading"><span class="tiny-bars">▮▮▮</span><span>OFFICIAL BALLOT</span></div>
-      <div class="ballot-line wide"></div><div class="ballot-line short"></div>
+      <div class="ballot-heading">
+        <span class="tiny-bars">▮▮▮</span><span>OFFICIAL BALLOT</span>
+      </div>
+      <div class="ballot-line wide"></div>
+      <div class="ballot-line short"></div>
       <div class="ballot-option"><span></span><i></i></div>
       <div class="ballot-option selected"><span>✓</span><i></i></div>
       <div class="ballot-option"><span></span><i></i></div>
       <div class="ballot-footer-line"></div>
     </div>
-    <div class="floating-label label-bottom"><strong>01</strong><span>voice can make<br>a difference.</span></div>
+    <div class="floating-label label-bottom">
+      <strong>01</strong><span>voice can make<br />a difference.</span>
+    </div>
   </div>
 </section>
 
 <section class="elections-section" id="elections">
   <div class="section-wrap">
     <div class="section-heading">
-      <div><p class="eyebrow">Participate today</p><h2>Current elections<span class="heading-dot">.</span></h2></div>
-      <p>Find the decisions that matter to you. Every election is one more chance to shape what comes next.</p>
+      <div>
+        <p class="eyebrow">Participate today</p>
+        <h2>Current elections<span class="heading-dot">.</span></h2>
+      </div>
+      <p>
+        Find the decisions that matter to you. Every election is one more chance to shape what comes
+        next.
+      </p>
     </div>
 
     @if (loading()) {
@@ -43,8 +64,13 @@
     } @else if (!api.currentUser()?.authenticated) {
       <div class="invite-card">
         <div class="invite-icon">✦</div>
-        <div><h3>Your community is waiting.</h3><p>Sign in with your voter account to see available elections and take part.</p></div>
-        <a routerLink="/login" class="button button-dark">Voter sign in <span aria-hidden="true">↗</span></a>
+        <div>
+          <h3>Your community is waiting.</h3>
+          <p>Sign in with your voter account to see available elections and take part.</p>
+        </div>
+        <a routerLink="/login" class="button button-dark"
+          >Voter sign in <span aria-hidden="true">↗</span></a
+        >
       </div>
     } @else if (!elections().length) {
       <div class="state-card">There are no published elections yet. Check back soon.</div>
@@ -52,11 +78,45 @@
       <div class="election-grid">
         @for (election of elections(); track election.id) {
           <article class="election-card">
-            <div class="card-topline"><span class="election-number">ELECTION / {{ $index + 1 < 10 ? '0' : '' }}{{ $index + 1 }}</span><span class="status-pill" [class.is-open]="election.status === 'open'" [class.is-closed]="election.status === 'closed'"><span></span>{{ election.status }}</span></div>
-            <div class="election-card-body"><div class="card-symbol" aria-hidden="true">✳</div><h3>{{ election.title }}</h3><p>{{ election.description || 'Meet the candidates and help choose what comes next.' }}</p></div>
-            <div class="election-card-meta"><span>{{ election.candidates.length }} candidates</span><span>{{ election.ends_at | date:'MMM d, y' }}</span></div>
-            <a [routerLink]="election.status === 'closed' ? ['/elections', election.id, 'results'] : ['/elections', election.id]" class="card-link">
-              {{ election.status === 'closed' ? 'View results' : election.has_voted ? 'View your ballot' : election.status === 'upcoming' ? 'See election' : 'Explore ballot' }} <span aria-hidden="true">↗</span>
+            <div class="card-topline">
+              <span class="election-number"
+                >ELECTION / {{ $index + 1 < 10 ? '0' : '' }}{{ $index + 1 }}</span
+              ><span
+                class="status-pill"
+                [class.is-open]="election.status === 'open'"
+                [class.is-closed]="election.status === 'closed'"
+                ><span></span>{{ election.status }}</span
+              >
+            </div>
+            <div class="election-card-body">
+              <div class="card-symbol" aria-hidden="true">✳</div>
+              <h3>{{ election.title }}</h3>
+              <p>
+                {{ election.description || 'Meet the candidates and help choose what comes next.' }}
+              </p>
+            </div>
+            <div class="election-card-meta">
+              <span>{{ election.candidates.length }} candidates</span
+              ><span>{{ election.ends_at | date: 'MMM d, y' }}</span>
+            </div>
+            <a
+              [routerLink]="
+                election.status === 'closed'
+                  ? ['/elections', election.id, 'results']
+                  : ['/elections', election.id]
+              "
+              class="card-link"
+            >
+              {{
+                election.status === 'closed'
+                  ? 'View results'
+                  : election.has_voted
+                    ? 'View your ballot'
+                    : election.status === 'upcoming'
+                      ? 'See election'
+                      : 'Explore ballot'
+              }}
+              <span aria-hidden="true">↗</span>
             </a>
           </article>
         }
@@ -66,10 +126,28 @@
 </section>
 
 <section class="how-section section-wrap" id="how-it-works">
-  <div class="how-intro"><p class="eyebrow">Simple by design</p><h2>Good decisions start<br>with showing up<span class="heading-dot">.</span></h2></div>
+  <div class="how-intro">
+    <p class="eyebrow">Simple by design</p>
+    <h2>Good decisions start<br />with showing up<span class="heading-dot">.</span></h2>
+  </div>
   <div class="how-grid">
-    <div class="how-step"><span class="step-number">01 /</span><div class="step-icon">↗</div><h3>Find your election</h3><p>Sign in and see the elections available to your community.</p></div>
-    <div class="how-step"><span class="step-number">02 /</span><div class="step-icon">◎</div><h3>Meet the candidates</h3><p>Read each candidate's statement before making your choice.</p></div>
-    <div class="how-step"><span class="step-number">03 /</span><div class="step-icon">✓</div><h3>Cast your vote</h3><p>Confirm your ballot once. See the totals when voting closes.</p></div>
+    <div class="how-step">
+      <span class="step-number">01 /</span>
+      <div class="step-icon">↗</div>
+      <h3>Find your election</h3>
+      <p>Sign in and see the elections available to your community.</p>
+    </div>
+    <div class="how-step">
+      <span class="step-number">02 /</span>
+      <div class="step-icon">◎</div>
+      <h3>Meet the candidates</h3>
+      <p>Read each candidate's statement before making your choice.</p>
+    </div>
+    <div class="how-step">
+      <span class="step-number">03 /</span>
+      <div class="step-icon">✓</div>
+      <h3>Cast your vote</h3>
+      <p>Confirm your ballot once. See the totals when voting closes.</p>
+    </div>
   </div>
 </section>

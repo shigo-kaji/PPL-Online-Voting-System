@@ -8,6 +8,10 @@ export const routes: Routes = [
   { path: '', component: HomePage, title: 'Elections | CommonGround' },
   { path: 'login', component: LoginPage, title: 'Sign in | CommonGround' },
   { path: 'elections/:id', component: BallotPage, title: 'Cast your vote | CommonGround' },
-  { path: 'elections/:id/results', component: ResultsPage, title: 'Election results | CommonGround' },
+  {
+    path: 'elections/:id/results',
+    component: ResultsPage,
+    title: 'Election results | CommonGround',
+  },
   { path: '**', redirectTo: '' },
 ];
