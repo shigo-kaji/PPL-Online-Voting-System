@@ -21,15 +21,18 @@ if (!existsSync(join(dist, 'index.html'))) {
 createServer((incoming, outgoing) => {
   const pathname = new URL(incoming.url || '/', 'http://localhost').pathname;
   if (pathname.startsWith('/api/')) {
-    const upstream = proxyRequest({
-      ...backend,
-      method: incoming.method,
-      path: incoming.url,
-      headers: incoming.headers,
-    }, response => {
-      outgoing.writeHead(response.statusCode || 502, response.headers);
-      response.pipe(outgoing);
-    });
+    const upstream = proxyRequest(
+      {
+        ...backend,
+        method: incoming.method,
+        path: incoming.url,
+        headers: incoming.headers,
+      },
+      (response) => {
+        outgoing.writeHead(response.statusCode || 502, response.headers);
+        response.pipe(outgoing);
+      },
+    );
     upstream.on('error', () => {
       outgoing.writeHead(502, { 'content-type': 'application/json' });
       outgoing.end(JSON.stringify({ detail: 'The voting API is unavailable.' }));
@@ -50,7 +53,9 @@ createServer((incoming, outgoing) => {
     return;
   }
   if (!existsSync(target) || !statSync(target).isFile()) target = join(dist, 'index.html');
-  outgoing.writeHead(200, { 'content-type': contentTypes[extname(target)] || 'application/octet-stream' });
+  outgoing.writeHead(200, {
+    'content-type': contentTypes[extname(target)] || 'application/octet-stream',
+  });
   createReadStream(target).pipe(outgoing);
 }).listen(port, '127.0.0.1', () => {
   console.log(`Angular preview available at http://127.0.0.1:${port}`);

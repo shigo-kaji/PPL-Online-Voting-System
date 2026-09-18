@@ -1,7 +1,9 @@
 <div class="site-shell">
   <header class="site-header">
     <a routerLink="/" class="brand" aria-label="CommonGround home">
-      <span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span>
+      <span class="brand-mark" aria-hidden="true"
+        ><span></span><span></span><span></span><span></span
+      ></span>
       <span>CommonGround<span class="brand-dot">.</span></span>
     </a>
     <nav class="header-nav" aria-label="Main navigation">
@@ -10,10 +12,14 @@
     </nav>
     <div class="header-actions">
       @if (api.currentUser()?.authenticated) {
-        <span class="account-chip"><span class="account-dot"></span>{{ api.currentUser()?.username }}</span>
+        <span class="account-chip"
+          ><span class="account-dot"></span>{{ api.currentUser()?.username }}</span
+        >
         <button type="button" class="text-button" (click)="signOut()">Sign out</button>
       } @else {
-        <a routerLink="/login" class="button button-small button-dark">Voter sign in <span aria-hidden="true">↗</span></a>
+        <a routerLink="/login" class="button button-small button-dark"
+          >Voter sign in <span aria-hidden="true">↗</span></a
+        >
       }
     </div>
   </header>
@@ -26,7 +32,11 @@
 
   <footer class="site-footer">
     <div class="footer-inner">
-      <a routerLink="/" class="brand footer-brand"><span class="brand-mark" aria-hidden="true"><span></span><span></span><span></span><span></span></span><span>CommonGround<span class="brand-dot">.</span></span></a>
+      <a routerLink="/" class="brand footer-brand"
+        ><span class="brand-mark" aria-hidden="true"
+          ><span></span><span></span><span></span><span></span></span
+        ><span>CommonGround<span class="brand-dot">.</span></span></a
+      >
       <p>A thoughtful space for every voice in your community.</p>
       <span>Classroom election prototype · Group 5</span>
     </div>

@@ -7,12 +7,15 @@ import { ApiService, readableError } from './api.service';
   selector: 'app-root',
   imports: [RouterLink, RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
 export class App implements OnInit {
   readonly signOutError = signal('');
 
-  constructor(readonly api: ApiService, private readonly router: Router) {}
+  constructor(
+    readonly api: ApiService,
+    private readonly router: Router,
+  ) {}
 
   ngOnInit(): void {
     void this.api.refreshSession().catch(() => this.api.currentUser.set({ authenticated: false }));

@@ -17,7 +17,10 @@ export class LoginPage {
     password: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
-  constructor(private readonly api: ApiService, private readonly router: Router) {}
+  constructor(
+    private readonly api: ApiService,
+    private readonly router: Router,
+  ) {}
 
   async submit(): Promise<void> {
     this.error.set('');
@@ -27,7 +30,10 @@ export class LoginPage {
     }
     this.submitting.set(true);
     try {
-      await this.api.login(this.form.controls.username.value.trim(), this.form.controls.password.value);
+      await this.api.login(
+        this.form.controls.username.value.trim(),
+        this.form.controls.password.value,
+      );
       await this.router.navigateByUrl('/');
     } catch (error) {
       this.error.set(readableError(error));
