@@ -13,90 +13,65 @@ concurrency:
 
 env:
   NODE_VERSION: "22"
+  PYTHON_VERSION: "3.12"
   REGISTRY: ghcr.io
   # ghcr.io requires a lowercase image path.
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_BASE: ${{ github.repository }}
 
 permissions:
   contents: read
 
 jobs:
   # ---------------------------------------------------------------------
-  # CI: lint, test, build, and containerize. Runs for every PR into dev
-  # or main, and for every push to dev or main. Never pushes an image or
-  # deploys anything.
+  # CI: lint/test/build each half of the app, then containerize both.
+  # Runs for every PR into dev or main, and for every push to dev or
+  # main. Never pushes an image or deploys anything.
   # ---------------------------------------------------------------------
-  lint:
-    name: Lint
+  frontend-checks:
+    name: Frontend Lint + Test + Build
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
       - name: Install dependencies
-        # `npm ci` needs a committed package-lock.json; fall back to
-        # `npm install` when the repository doesn't have one.
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-      - run: npm run lint
+        run: npm ci
+      - name: Check formatting (prettier)
+        run: npx prettier --check .
+      - name: Run unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
 
-  test:
-    name: Tests + Coverage Artifact
+  backend-checks:
+    name: Backend Test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-python@v5
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
       - name: Install dependencies
-        # `npm ci` needs a committed package-lock.json; fall back to
-        # `npm install` when the repository doesn't have one.
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-      - run: npm run test:ci
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-${{ github.run_id }}
-          path: coverage/
-          retention-days: 14
+        run: pip install -r requirements.txt
+      - name: Run tests
+        # No DATABASE_URL set, so Django falls back to a throwaway
+        # SQLite test database - no Postgres service needed in CI.
+        run: python manage.py test
 
-  build:
-    name: Build
-    needs: [lint, test]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: Install dependencies
-        # `npm ci` needs a committed package-lock.json; fall back to
-        # `npm install` when the repository doesn't have one.
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
-      - run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-
-  docker-build:
+  docker-build-frontend:
     name: Docker Build (frontend)
-    needs: build
+    needs: frontend-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -104,18 +79,15 @@ jobs:
       - name: Build image (validation only, not pushed)
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./frontend
+          file: ./frontend/Dockerfile
           push: false
-          build-args: |
-            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-            VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-            VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
 
   docker-build-backend:
     name: Docker Build (backend)
+    needs: backend-checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -123,27 +95,30 @@ jobs:
       - name: Build image (validation only, not pushed)
         uses: docker/build-push-action@v6
         with:
-          context: ./server
-          file: ./server/Dockerfile
+          context: ./backend
+          file: ./backend/Dockerfile
           push: false
           cache-from: type=gha,scope=backend
           cache-to: type=gha,mode=max,scope=backend
 
   # ---------------------------------------------------------------------
   # Release: only for pushes (not PRs) to dev or main, and only once CI
-  # above is green. Builds the real, tagged image and pushes it to GHCR.
+  # above is green. Builds the real, tagged images and pushes both to
+  # GHCR as separate frontend/backend images.
   # ---------------------------------------------------------------------
-  release-image:
-    name: Push Docker Image
+  release-images:
+    name: Push Docker Images
     if: github.event_name == 'push'
-    needs: [docker-build, docker-build-backend]
+    needs: [docker-build-frontend, docker-build-backend]
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     permissions:
       contents: read
       packages: write
     outputs:
-      image: ${{ steps.tags.outputs.image }}
+      frontend_image: ${{ steps.tags.outputs.frontend_image }}
+      backend_image: ${{ steps.tags.outputs.backend_image }}
+      env_tag: ${{ steps.tags.outputs.env_tag }}
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
@@ -156,65 +131,72 @@ jobs:
       - name: Compute image tags
         id: tags
         run: |
-          IMAGE="${REGISTRY}/$(echo "${IMAGE_NAME}" | tr '[:upper:]' '[:lower:]')"
-          SHA_TAG="${IMAGE}:${GITHUB_SHA}"
+          BASE="${REGISTRY}/$(echo "${IMAGE_BASE}" | tr '[:upper:]' '[:lower:]')"
           if [ "${{ github.ref_name }}" = "main" ]; then
-            ENV_TAG="${IMAGE}:latest"
+            ENV_TAG="latest"
           else
-            ENV_TAG="${IMAGE}:dev"
+            ENV_TAG="dev"
           fi
-          echo "image=${IMAGE}" >> "$GITHUB_OUTPUT"
-          echo "sha_tag=${SHA_TAG}" >> "$GITHUB_OUTPUT"
+          echo "frontend_image=${BASE}-frontend" >> "$GITHUB_OUTPUT"
+          echo "backend_image=${BASE}-backend" >> "$GITHUB_OUTPUT"
           echo "env_tag=${ENV_TAG}" >> "$GITHUB_OUTPUT"
-      - name: Build and push
+      - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
+          context: ./frontend
+          file: ./frontend/Dockerfile
           push: true
           tags: |
-            ${{ steps.tags.outputs.sha_tag }}
-            ${{ steps.tags.outputs.env_tag }}
-          build-args: |
-            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-            VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-            VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+            ${{ steps.tags.outputs.frontend_image }}:${{ github.sha }}
+            ${{ steps.tags.outputs.frontend_image }}:${{ steps.tags.outputs.env_tag }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.backend_image }}:${{ github.sha }}
+            ${{ steps.tags.outputs.backend_image }}:${{ steps.tags.outputs.env_tag }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
 
   # ---------------------------------------------------------------------
   # Deploy: environment-gated, so GitHub Environment protection rules
   # (required reviewers, wait timers, etc.) are enforced by GitHub itself
   # rather than any custom approval logic here.
   #
-  # No hosting target is configured in this repository yet (no cloud
-  # provider workflow, no SSH/Kubernetes/PaaS config was found). The
-  # steps below are placeholders — replace the "Deploy" step with the
-  # real deployment command for your infrastructure. See
-  # .github/CI_CD.md for what to fill in.
+  # No hosting target is configured in this repository yet. Replace the
+  # "Deploy" step with the real deployment command for your
+  # infrastructure (e.g. pulling both images in docker-compose.yml on a
+  # host, or deploying to a cloud provider).
   # ---------------------------------------------------------------------
   deploy-development:
     name: Deploy to Development
     if: github.event_name == 'push' && github.ref_name == 'dev'
-    needs: release-image
+    needs: release-images
     runs-on: ubuntu-latest
     environment:
       name: development
     steps:
       - name: Deploy
         run: |
-          echo "TODO: deploy ${{ needs.release-image.outputs.image }}:dev to the development environment."
-          echo "No deployment target is configured yet — see .github/CI_CD.md."
+          echo "TODO: deploy ${{ needs.release-images.outputs.frontend_image }}:dev"
+          echo "TODO: deploy ${{ needs.release-images.outputs.backend_image }}:dev"
+          echo "No deployment target is configured yet."
 
   deploy-production:
     name: Deploy to Production
     if: github.event_name == 'push' && github.ref_name == 'main'
-    needs: release-image
+    needs: release-images
     runs-on: ubuntu-latest
     environment:
       name: production
     steps:
       - name: Deploy
         run: |
-          echo "TODO: deploy ${{ needs.release-image.outputs.image }}:latest to the production environment."
-          echo "No deployment target is configured yet — see .github/CI_CD.md."
+          echo "TODO: deploy ${{ needs.release-images.outputs.frontend_image }}:latest"
+          echo "TODO: deploy ${{ needs.release-images.outputs.backend_image }}:latest"
+          echo "No deployment target is configured yet."
