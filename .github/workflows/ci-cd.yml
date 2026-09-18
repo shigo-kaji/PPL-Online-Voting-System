@@ -34,8 +34,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
+      - name: Install dependencies
+        # `npm ci` needs a committed package-lock.json; fall back to
+        # `npm install` when the repository doesn't have one.
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
       - run: npm run lint
 
   test:
@@ -46,8 +53,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
+      - name: Install dependencies
+        # `npm ci` needs a committed package-lock.json; fall back to
+        # `npm install` when the repository doesn't have one.
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
       - run: npm run test:ci
       - name: Upload coverage report
         if: always()
@@ -66,8 +80,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-      - run: npm ci
+      - name: Install dependencies
+        # `npm ci` needs a committed package-lock.json; fall back to
+        # `npm install` when the repository doesn't have one.
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
       - run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
