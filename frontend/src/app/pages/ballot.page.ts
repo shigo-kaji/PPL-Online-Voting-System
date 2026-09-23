@@ -13,7 +13,30 @@ import { Election } from '../models';
 export class BallotPage implements OnInit {
   readonly election = signal<Election | null>(null);
   readonly selectedId = signal<number | null>(null);
-  readonly selectedCandidate = computed(() => this.election()?.candidates.find(candidate => candidate.id === this.selectedId()));
+  readonly currentIndex = signal(0);
+  readonly swipeDirection = signal<'left' | 'right' | null>(null);
+  readonly currentCandidate = computed(() => {
+    const current = this.election();
+    const candidates = current?.candidates ?? [];
+    if (!candidates.length) return null;
+    const safeIndex = Math.min(Math.max(this.currentIndex(), 0), candidates.length - 1);
+    return candidates[safeIndex] ?? null;
+  });
+  readonly previousCandidate = computed(() => {
+    const current = this.election();
+    const candidates = current?.candidates ?? [];
+    if (!candidates.length) return null;
+    const previousIndex = (this.currentIndex() - 1 + candidates.length) % candidates.length;
+    return candidates[previousIndex] ?? null;
+  });
+  readonly nextCandidate = computed(() => {
+    const current = this.election();
+    const candidates = current?.candidates ?? [];
+    if (!candidates.length) return null;
+    const nextIndex = (this.currentIndex() + 1) % candidates.length;
+    return candidates[nextIndex] ?? null;
+  });
+  readonly selectedCandidate = computed(() => this.currentCandidate() ?? this.election()?.candidates.find(candidate => candidate.id === this.selectedId()) ?? null);
   readonly loading = signal(true);
   readonly signedIn = signal(false);
   readonly submitting = signal(false);
@@ -36,12 +59,31 @@ export class BallotPage implements OnInit {
     try {
       const user = await this.api.refreshSession();
       this.signedIn.set(!!user.authenticated);
-      this.election.set(await this.api.getElection(id));
+      const current = await this.api.getElection(id);
+      this.election.set(current);
+      const firstCandidate = current.candidates[0];
+      if (firstCandidate) {
+        this.currentIndex.set(0);
+        this.selectedId.set(firstCandidate.id);
+      }
     } catch (error) {
       this.error.set(readableError(error));
     } finally {
       this.loading.set(false);
     }
+  }
+
+  moveSelection(step: number): void {
+    const candidates = this.election()?.candidates ?? [];
+    if (!candidates.length) return;
+    this.swipeDirection.set(step < 0 ? 'left' : 'right');
+    const nextIndex = (this.currentIndex() + step + candidates.length) % candidates.length;
+    this.currentIndex.set(nextIndex);
+    this.selectedId.set(candidates[nextIndex].id);
+    this.error.set('');
+    window.setTimeout(() => {
+      this.swipeDirection.set(null);
+    }, 520);
   }
 
   initials(name: string): string {
