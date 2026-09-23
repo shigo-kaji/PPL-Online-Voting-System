@@ -15,6 +15,7 @@ export class BallotPage implements OnInit {
   readonly selectedId = signal<number | null>(null);
   readonly selectedCandidate = computed(() => this.election()?.candidates.find(candidate => candidate.id === this.selectedId()));
   readonly loading = signal(true);
+  readonly signedIn = signal(false);
   readonly submitting = signal(false);
   readonly reviewing = signal(false);
   readonly success = signal(false);
@@ -34,10 +35,7 @@ export class BallotPage implements OnInit {
     }
     try {
       const user = await this.api.refreshSession();
-      if (!user.authenticated) {
-        await this.router.navigateByUrl('/login');
-        return;
-      }
+      this.signedIn.set(!!user.authenticated);
       this.election.set(await this.api.getElection(id));
     } catch (error) {
       this.error.set(readableError(error));
@@ -52,6 +50,10 @@ export class BallotPage implements OnInit {
 
   review(): void {
     this.error.set('');
+    if (!this.signedIn()) {
+      void this.router.navigate(['/login'], { queryParams: { returnUrl: this.router.url } });
+      return;
+    }
     if (!this.selectedId()) {
       this.error.set('Select a candidate before continuing.');
       return;

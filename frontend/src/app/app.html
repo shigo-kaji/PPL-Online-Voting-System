@@ -13,7 +13,8 @@
         <span class="account-chip"><span class="account-dot"></span>{{ api.currentUser()?.username }}</span>
         <button type="button" class="text-button" (click)="signOut()">Sign out</button>
       } @else {
-        <a routerLink="/login" class="button button-small button-dark">Voter sign in <span aria-hidden="true">↗</span></a>
+        <a routerLink="/signup" [queryParams]="returnParams()" class="text-button">Sign up</a>
+        <a routerLink="/login" [queryParams]="returnParams()" class="button button-small button-dark">Voter sign in <span aria-hidden="true">↗</span></a>
       }
     </div>
   </header>

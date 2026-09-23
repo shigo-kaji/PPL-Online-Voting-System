@@ -32,6 +32,16 @@ export class ApiService {
     await this.refreshSession();
   }
 
+  async register(username: string, password: string): Promise<void> {
+    await this.refreshCsrf();
+    await firstValueFrom(this.http.post('/api/auth/register/', { username, password }, {
+      headers: this.csrfHeaders(),
+    }));
+    // Django rotates its CSRF token when the new user is logged in.
+    await this.refreshCsrf();
+    await this.refreshSession();
+  }
+
   async logout(): Promise<void> {
     await this.refreshCsrf();
     await firstValueFrom(this.http.post('/api/auth/logout/', {}, { headers: this.csrfHeaders() }));

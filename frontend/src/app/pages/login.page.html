@@ -20,7 +20,7 @@
       @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
       <button class="button button-primary button-full" type="submit" [disabled]="submitting()">{{ submitting() ? 'Signing in…' : 'Continue to elections' }} <span aria-hidden="true">↗</span></button>
     </form>
-    <div class="form-footnote"><span>▣</span> Your account is managed by the election administrator.</div>
+    <div class="form-footnote">New here? <a routerLink="/signup" [queryParams]="route.snapshot.queryParams"><strong>Create an account</strong></a></div>
     <a routerLink="/" class="back-link">← Back to home</a>
   </div>
 </section>
