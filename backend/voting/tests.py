@@ -1,10 +1,12 @@
 import json
+import tempfile
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
@@ -37,6 +39,16 @@ class VotingApiTests(TestCase):
         self.assertEqual(vote.candidate, self.alex)
         detail = self.client.get(f"/api/elections/{self.election.id}/")
         self.assertTrue(detail.data["has_voted"])
+
+    def test_candidate_photo_url_is_exposed_or_null(self):
+        gif = b"GIF89a"  # content is not validated when saving through the model
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            self.alex.photo = SimpleUploadedFile("alex.gif", gif, content_type="image/gif")
+            self.alex.save()
+            detail = self.client.get(f"/api/elections/{self.election.id}/")
+        photos = {candidate["name"]: candidate["photo"] for candidate in detail.data["candidates"]}
+        self.assertRegex(photos["Alex"], r"^http://testserver/media/candidates/alex.*\.gif$")
+        self.assertIsNone(photos["Sam"])
 
     def test_second_vote_is_rejected_and_original_remains(self):
         self.client.post(self.vote_url(), {"candidate_id": self.alex.id}, format="json")

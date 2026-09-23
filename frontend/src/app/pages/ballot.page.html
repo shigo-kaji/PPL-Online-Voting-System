@@ -36,7 +36,7 @@
             <div class="candidate-list" role="radiogroup" aria-label="Choose a candidate">
               @for (candidate of current.candidates; track candidate.id) {
                 <button type="button" class="candidate-card" role="radio" [attr.aria-checked]="selectedId() === candidate.id" [class.selected]="selectedId() === candidate.id" (click)="selectedId.set(candidate.id); error.set('')">
-                  <span class="candidate-avatar">{{ initials(candidate.name) }}</span>
+                  <span class="candidate-avatar">@if (candidate.photo) {<img [src]="candidate.photo" alt="" loading="lazy" />} @else { {{ initials(candidate.name) }} }</span>
                   <span class="candidate-content"><strong>{{ candidate.name }}</strong><small>{{ candidate.statement || 'Candidate for this election' }}</small></span>
                   <span class="selection-ring" aria-hidden="true">{{ selectedId() === candidate.id ? '✓' : '' }}</span>
                 </button>

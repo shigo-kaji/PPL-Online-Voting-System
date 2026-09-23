@@ -15,6 +15,17 @@ class ElectionAdmin(admin.ModelAdmin):
     inlines = (CandidateInline,)
 
 
+@admin.register(Candidate)
+class CandidateAdmin(admin.ModelAdmin):
+    list_display = ("name", "election", "has_photo")
+    list_filter = ("election",)
+    search_fields = ("name",)
+
+    @admin.display(boolean=True, description="Photo")
+    def has_photo(self, candidate):
+        return bool(candidate.photo)
+
+
 @admin.register(Vote)
 class VoteAdmin(admin.ModelAdmin):
     list_display = ("id", "election", "voter", "candidate", "cast_at")
@@ -28,4 +39,5 @@ class VoteAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        # Superusers need this to remove elections or candidates that already have votes.
+        return request.user.is_superuser

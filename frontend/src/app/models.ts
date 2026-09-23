@@ -9,6 +9,7 @@ export interface Candidate {
   id: number;
   name: string;
   statement: string;
+  photo: string | null;
 }
 
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';

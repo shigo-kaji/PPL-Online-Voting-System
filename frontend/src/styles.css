@@ -988,6 +988,12 @@ button:disabled {
   font-weight: 800;
   font-size: 19px;
   flex: none;
+  overflow: hidden;
+}
+.candidate-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .candidate-card:nth-child(3n + 2) .candidate-avatar {
   background: #e9e5f4;

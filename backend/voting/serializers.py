@@ -6,7 +6,7 @@ from .models import Candidate, Election
 class CandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Candidate
-        fields = ("id", "name", "statement")
+        fields = ("id", "name", "statement", "photo")
 
 
 class ElectionSerializer(serializers.ModelSerializer):

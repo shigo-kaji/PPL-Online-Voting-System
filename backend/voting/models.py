@@ -44,6 +44,7 @@ class Candidate(models.Model):
     election = models.ForeignKey(Election, related_name="candidates", on_delete=models.CASCADE)
     name = models.CharField(max_length=120)
     statement = models.TextField(blank=True)
+    photo = models.ImageField(upload_to="candidates/", blank=True)
 
     class Meta:
         ordering = ["name", "id"]
@@ -56,8 +57,8 @@ class Candidate(models.Model):
 
 
 class Vote(models.Model):
-    election = models.ForeignKey(Election, related_name="votes", on_delete=models.PROTECT)
-    candidate = models.ForeignKey(Candidate, related_name="votes", on_delete=models.PROTECT)
+    election = models.ForeignKey(Election, related_name="votes", on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, related_name="votes", on_delete=models.CASCADE)
     voter = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="votes", on_delete=models.PROTECT)
     cast_at = models.DateTimeField(auto_now_add=True)
 
