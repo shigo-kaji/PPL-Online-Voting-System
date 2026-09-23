@@ -1,157 +1,53 @@
-<div class="page-band">
-  <div class="section-wrap">
-    <a routerLink="/" class="breadcrumb">← All elections</a
-    ><span class="band-kicker">MAKE YOUR CHOICE</span>
-  </div>
-</div>
+<div class="page-band"><div class="section-wrap"><a routerLink="/" class="breadcrumb">← All elections</a><span class="band-kicker">MAKE YOUR CHOICE</span></div></div>
 
 <section class="ballot-page section-wrap">
   @if (loading()) {
     <div class="state-card">Loading your ballot…</div>
   } @else if (error() && !election()) {
-    <div class="state-card state-error" role="alert">
-      {{ error() }} <a routerLink="/">Return to elections</a>
-    </div>
+    <div class="state-card state-error" role="alert">{{ error() }} <a routerLink="/">Return to elections</a></div>
   } @else if (election(); as current) {
     @if (success()) {
       <div class="success-card">
         <div class="success-mark">✓</div>
         <p class="eyebrow">Ballot received</p>
         <h1>Your vote is in<span class="heading-dot">.</span></h1>
-        <p>
-          Thanks for taking part in <strong>{{ current.title }}</strong
-          >. Your choice has been recorded. Results will be available once voting closes.
-        </p>
-        <a routerLink="/" class="button button-primary"
-          >Back to elections <span aria-hidden="true">↗</span></a
-        >
+        <p>Thanks for taking part in <strong>{{ current.title }}</strong>. Your choice has been recorded. Results will be available once voting closes.</p>
+        <a routerLink="/" class="button button-primary">Back to elections <span aria-hidden="true">↗</span></a>
       </div>
     } @else {
       <div class="ballot-heading-row">
-        <div>
-          <p class="eyebrow">Election / {{ current.id }}</p>
-          <h1>{{ current.title }}<span class="heading-dot">.</span></h1>
-          <p class="ballot-intro">
-            {{
-              current.description ||
-                'Get to know the candidates, then choose the person you believe in.'
-            }}
-          </p>
-        </div>
-        <div class="ballot-meta">
-          <span
-            class="status-pill"
-            [class.is-open]="current.status === 'open'"
-            [class.is-closed]="current.status === 'closed'"
-            ><span></span>{{ current.status }}</span
-          >
-          <div>
-            Voting ends <strong>{{ current.ends_at | date: 'MMM d, y · h:mm a' }}</strong>
-          </div>
-        </div>
+        <div><p class="eyebrow">Election / {{ current.id }}</p><h1>{{ current.title }}<span class="heading-dot">.</span></h1><p class="ballot-intro">{{ current.description || 'Get to know the candidates, then choose the person you believe in.' }}</p></div>
+        <div class="ballot-meta"><span class="status-pill" [class.is-open]="current.status === 'open'" [class.is-closed]="current.status === 'closed'"><span></span>{{ current.status }}</span><div>Voting ends <strong>{{ current.ends_at | date:'MMM d, y · h:mm a' }}</strong></div></div>
       </div>
 
       @if (current.has_voted) {
-        <div class="notice-card">
-          <div class="notice-icon">✓</div>
-          <div>
-            <h2>You've already cast your vote.</h2>
-            <p>Each voter can submit one ballot in this election. Thanks for participating.</p>
-          </div>
-        </div>
-        @if (current.status === 'closed') {
-          <a [routerLink]="['/elections', current.id, 'results']" class="button button-primary"
-            >View results ↗</a
-          >
-        }
+        <div class="notice-card"><div class="notice-icon">✓</div><div><h2>You've already cast your vote.</h2><p>Each voter can submit one ballot in this election. Thanks for participating.</p></div></div>
+        @if (current.status === 'closed') { <a [routerLink]="['/elections', current.id, 'results']" class="button button-primary">View results ↗</a> }
       } @else if (current.status === 'closed') {
-        <div class="notice-card">
-          <div class="notice-icon">◷</div>
-          <div>
-            <h2>Voting has closed.</h2>
-            <p>The election has ended. You can now explore the results.</p>
-          </div>
-        </div>
-        <a [routerLink]="['/elections', current.id, 'results']" class="button button-primary"
-          >View results ↗</a
-        >
+        <div class="notice-card"><div class="notice-icon">◷</div><div><h2>Voting has closed.</h2><p>The election has ended. You can now explore the results.</p></div></div>
+        <a [routerLink]="['/elections', current.id, 'results']" class="button button-primary">View results ↗</a>
       } @else if (current.status === 'upcoming') {
-        <div class="notice-card">
-          <div class="notice-icon">◷</div>
-          <div>
-            <h2>Voting opens soon.</h2>
-            <p>
-              Come back on {{ current.starts_at | date: 'MMM d, y · h:mm a' }} to cast your ballot.
-            </p>
-          </div>
-        </div>
+        <div class="notice-card"><div class="notice-icon">◷</div><div><h2>Voting opens soon.</h2><p>Come back on {{ current.starts_at | date:'MMM d, y · h:mm a' }} to cast your ballot.</p></div></div>
       } @else {
         <div class="ballot-layout">
           <div class="ballot-main">
-            <div class="ballot-section-title">
-              <div>
-                <span class="section-count">01</span>
-                <h2>Choose a candidate</h2>
-              </div>
-              <span>Select one</span>
-            </div>
-            <p class="ballot-helper">
-              Take a moment to read each candidate's statement before you decide.
-            </p>
+            <div class="ballot-section-title"><div><span class="section-count">01</span><h2>Choose a candidate</h2></div><span>Select one</span></div>
+            <p class="ballot-helper">Take a moment to read each candidate's statement before you decide.</p>
             <div class="candidate-list" role="radiogroup" aria-label="Choose a candidate">
               @for (candidate of current.candidates; track candidate.id) {
-                <button
-                  type="button"
-                  class="candidate-card"
-                  role="radio"
-                  [attr.aria-checked]="selectedId() === candidate.id"
-                  [class.selected]="selectedId() === candidate.id"
-                  (click)="selectedId.set(candidate.id); error.set('')"
-                >
+                <button type="button" class="candidate-card" role="radio" [attr.aria-checked]="selectedId() === candidate.id" [class.selected]="selectedId() === candidate.id" (click)="selectedId.set(candidate.id); error.set('')">
                   <span class="candidate-avatar">{{ initials(candidate.name) }}</span>
-                  <span class="candidate-content"
-                    ><strong>{{ candidate.name }}</strong
-                    ><small>{{ candidate.statement || 'Candidate for this election' }}</small></span
-                  >
-                  <span class="selection-ring" aria-hidden="true">{{
-                    selectedId() === candidate.id ? '✓' : ''
-                  }}</span>
+                  <span class="candidate-content"><strong>{{ candidate.name }}</strong><small>{{ candidate.statement || 'Candidate for this election' }}</small></span>
+                  <span class="selection-ring" aria-hidden="true">{{ selectedId() === candidate.id ? '✓' : '' }}</span>
                 </button>
               }
             </div>
-            @if (!current.candidates.length) {
-              <div class="state-card">No candidates have been added yet.</div>
-            }
-            @if (error()) {
-              <div class="form-error" role="alert">{{ error() }}</div>
-            }
+            @if (!current.candidates.length) { <div class="state-card">No candidates have been added yet.</div> }
+            @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
           </div>
           <aside class="ballot-aside">
-            <div class="aside-card">
-              <span class="aside-kicker">YOUR BALLOT</span>
-              <div class="aside-graphic" aria-hidden="true"><span>✓</span></div>
-              <h3>Ready when you are.</h3>
-              <p>Your vote is final once confirmed. Please review your choice before submitting.</p>
-              <div class="aside-rule"></div>
-              <div class="aside-row">
-                <span>Election</span><strong>{{ current.title }}</strong>
-              </div>
-              <div class="aside-row">
-                <span>Your selection</span
-                ><strong>{{ selectedCandidate()?.name || 'Not selected' }}</strong>
-              </div>
-              <button
-                type="button"
-                class="button button-primary button-full"
-                (click)="review()"
-                [disabled]="!current.candidates.length"
-              >
-                Review ballot <span aria-hidden="true">↗</span>
-              </button>
-            </div>
-            <p class="aside-footnote">
-              <span>▣</span> Only one vote is accepted per voter in this election.
-            </p>
+            <div class="aside-card"><span class="aside-kicker">YOUR BALLOT</span><div class="aside-graphic" aria-hidden="true"><span>✓</span></div><h3>Ready when you are.</h3><p>Your vote is final once confirmed. Please review your choice before submitting.</p><div class="aside-rule"></div><div class="aside-row"><span>Election</span><strong>{{ current.title }}</strong></div><div class="aside-row"><span>Your selection</span><strong>{{ selectedCandidate()?.name || 'Not selected' }}</strong></div>@if (signedIn()) {<button type="button" class="button button-primary button-full" (click)="review()" [disabled]="!current.candidates.length">Review ballot <span aria-hidden="true">↗</span></button>} @else {<a routerLink="/login" [queryParams]="{ returnUrl: '/elections/' + current.id }" class="button button-primary button-full">Sign in to vote <span aria-hidden="true">↗</span></a>}</div>
+            <p class="aside-footnote"><span>▣</span> Only one vote is accepted per voter in this election.</p>
           </aside>
         </div>
       }
@@ -160,31 +56,9 @@
     @if (reviewing()) {
       <div class="modal-backdrop" role="presentation" (click)="reviewing.set(false)"></div>
       <section class="review-modal" role="dialog" aria-modal="true" aria-labelledby="review-title">
-        <div class="modal-icon">✓</div>
-        <p class="eyebrow">One last look</p>
-        <h2 id="review-title">Confirm your vote?</h2>
-        <p>
-          You are voting for <strong>{{ selectedCandidate()?.name }}</strong> in
-          <strong>{{ current.title }}</strong
-          >. You cannot change your choice after submitting.
-        </p>
-        <div class="modal-actions">
-          <button
-            type="button"
-            class="button button-outline"
-            (click)="reviewing.set(false)"
-            [disabled]="submitting()"
-          >
-            Go back</button
-          ><button
-            type="button"
-            class="button button-primary"
-            (click)="confirm()"
-            [disabled]="submitting()"
-          >
-            {{ submitting() ? 'Submitting…' : 'Submit my vote' }} <span aria-hidden="true">↗</span>
-          </button>
-        </div>
+        <div class="modal-icon">✓</div><p class="eyebrow">One last look</p><h2 id="review-title">Confirm your vote?</h2>
+        <p>You are voting for <strong>{{ selectedCandidate()?.name }}</strong> in <strong>{{ current.title }}</strong>. You cannot change your choice after submitting.</p>
+        <div class="modal-actions"><button type="button" class="button button-outline" (click)="reviewing.set(false)" [disabled]="submitting()">Go back</button><button type="button" class="button button-primary" (click)="confirm()" [disabled]="submitting()">{{ submitting() ? 'Submitting…' : 'Submit my vote' }} <span aria-hidden="true">↗</span></button></div>
       </section>
     }
   }

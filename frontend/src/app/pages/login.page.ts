@@ -1,6 +1,6 @@
 import { Component, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ApiService, readableError } from '../api.service';
 
@@ -20,7 +20,14 @@ export class LoginPage {
   constructor(
     private readonly api: ApiService,
     private readonly router: Router,
+    readonly route: ActivatedRoute,
   ) {}
+
+  private returnUrl(): string {
+    const url = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';
+    // Only allow in-app paths, never external URLs.
+    return url.startsWith('/') && !url.startsWith('//') ? url : '/';
+  }
 
   async submit(): Promise<void> {
     this.error.set('');
@@ -30,11 +37,8 @@ export class LoginPage {
     }
     this.submitting.set(true);
     try {
-      await this.api.login(
-        this.form.controls.username.value.trim(),
-        this.form.controls.password.value,
-      );
-      await this.router.navigateByUrl('/');
+      await this.api.login(this.form.controls.username.value.trim(), this.form.controls.password.value);
+      await this.router.navigateByUrl(this.returnUrl());
     } catch (error) {
       this.error.set(readableError(error));
     } finally {
