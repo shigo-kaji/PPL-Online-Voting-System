@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { ApiService, readableError } from '../api.service';
@@ -11,11 +11,11 @@ import { Election } from '../models';
   templateUrl: './home.page.html',
 })
 export class HomePage implements OnInit {
+  readonly api = inject(ApiService);
+
   readonly elections = signal<Election[]>([]);
   readonly loading = signal(true);
   readonly error = signal('');
-
-  constructor(readonly api: ApiService) {}
 
   async ngOnInit(): Promise<void> {
     try {

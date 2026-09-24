@@ -1,6 +1,11 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import {
-  AbstractControl, FormControl, FormGroup, ReactiveFormsModule, ValidationErrors, Validators,
+  AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
@@ -18,6 +23,10 @@ function passwordsMatch(group: AbstractControl): ValidationErrors | null {
   templateUrl: './signup.page.html',
 })
 export class SignupPage {
+  private readonly api = inject(ApiService);
+  private readonly router = inject(Router);
+  readonly route = inject(ActivatedRoute);
+
   readonly submitting = signal(false);
   readonly error = signal('');
   readonly form = new FormGroup(
@@ -34,12 +43,6 @@ export class SignupPage {
     },
     { validators: passwordsMatch },
   );
-
-  constructor(
-    private readonly api: ApiService,
-    private readonly router: Router,
-    readonly route: ActivatedRoute,
-  ) {}
 
   private returnUrl(): string {
     const url = this.route.snapshot.queryParamMap.get('returnUrl') ?? '/';

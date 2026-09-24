@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 
 import { ApiService, readableError } from './api.service';
@@ -7,17 +7,18 @@ import { ApiService, readableError } from './api.service';
   selector: 'app-root',
   imports: [RouterLink, RouterOutlet],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
 export class App implements OnInit {
+  readonly api = inject(ApiService);
+  private readonly router = inject(Router);
+
   readonly signOutError = signal('');
   readonly currentUrl = signal('/');
 
-  constructor(readonly api: ApiService, private readonly router: Router) {}
-
   ngOnInit(): void {
     this.currentUrl.set(this.router.url);
-    this.router.events.subscribe(event => {
+    this.router.events.subscribe((event) => {
       if (event instanceof NavigationEnd) this.currentUrl.set(event.urlAfterRedirects);
     });
     void this.api.refreshSession().catch(() => this.api.currentUser.set({ authenticated: false }));
@@ -26,7 +27,9 @@ export class App implements OnInit {
   returnParams(): { returnUrl?: string } {
     const url = this.currentUrl();
     // Don't loop back to the auth pages themselves.
-    return url === '/' || url.startsWith('/login') || url.startsWith('/signup') ? {} : { returnUrl: url };
+    return url === '/' || url.startsWith('/login') || url.startsWith('/signup')
+      ? {}
+      : { returnUrl: url };
   }
 
   async signOut(): Promise<void> {
