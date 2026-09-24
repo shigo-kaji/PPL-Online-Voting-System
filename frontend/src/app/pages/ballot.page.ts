@@ -15,6 +15,10 @@ export class BallotPage implements OnInit {
   readonly selectedId = signal<number | null>(null);
   readonly currentIndex = signal(0);
   readonly swipeDirection = signal<'left' | 'right' | null>(null);
+  readonly dragX = signal(0);
+  readonly isDragging = signal(false);
+  private pointerStartX = 0;
+  private activePointerId: number | null = null;
   readonly currentCandidate = computed(() => {
     const current = this.election();
     const candidates = current?.candidates ?? [];
@@ -41,8 +45,19 @@ export class BallotPage implements OnInit {
   readonly signedIn = signal(false);
   readonly submitting = signal(false);
   readonly reviewing = signal(false);
+  readonly detailsOpen = signal(false);
+  readonly detailsClosing = signal(false);
+  readonly galleryOpen = signal(false);
+  readonly galleryIndex = signal(0);
+  readonly galleryDirection = signal<'next' | 'previous' | null>(null);
+  readonly gallerySlides = ['Portrait', 'Campus event', 'Community work'];
+  private galleryPointerStartX = 0;
   readonly success = signal(false);
   readonly error = signal('');
+  readonly dragTransform = computed(() => {
+    const offset = this.dragX();
+    return offset ? `translateX(${offset}px) rotate(${offset / 24}deg)` : '';
+  });
 
   constructor(
     private readonly api: ApiService,
@@ -84,6 +99,79 @@ export class BallotPage implements OnInit {
     window.setTimeout(() => {
       this.swipeDirection.set(null);
     }, 520);
+  }
+
+  onPointerDown(event: PointerEvent): void {
+    if ((event.target as HTMLElement).closest('button')) return;
+    this.pointerStartX = event.clientX;
+    this.activePointerId = event.pointerId;
+    this.isDragging.set(true);
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  onPointerMove(event: PointerEvent): void {
+    if (!this.isDragging() || event.pointerId !== this.activePointerId) return;
+    this.dragX.set(event.clientX - this.pointerStartX);
+  }
+
+  onPointerUp(event: PointerEvent): void {
+    if (!this.isDragging() || event.pointerId !== this.activePointerId) return;
+    const distance = event.clientX - this.pointerStartX;
+    this.isDragging.set(false);
+    this.dragX.set(0);
+    this.activePointerId = null;
+    if (Math.abs(distance) >= 64) {
+      this.moveSelection(distance < 0 ? 1 : -1);
+    }
+  }
+
+  onPointerCancel(): void {
+    this.isDragging.set(false);
+    this.dragX.set(0);
+    this.activePointerId = null;
+  }
+
+  openDetails(event: Event): void {
+    event.stopPropagation();
+    this.detailsClosing.set(false);
+    this.detailsOpen.set(true);
+  }
+
+  closeDetails(): void {
+    if (!this.detailsOpen() || this.detailsClosing()) return;
+    this.detailsClosing.set(true);
+    window.setTimeout(() => {
+      this.detailsOpen.set(false);
+      this.detailsClosing.set(false);
+    }, 220);
+  }
+
+  openGallery(index: number): void {
+    this.galleryIndex.set(index);
+    this.galleryOpen.set(true);
+  }
+
+  closeGallery(): void {
+    this.galleryOpen.set(false);
+  }
+
+  moveGallery(step: number): void {
+    this.galleryDirection.set(step > 0 ? 'next' : 'previous');
+    const nextIndex = (this.galleryIndex() + step + this.gallerySlides.length) % this.gallerySlides.length;
+    this.galleryIndex.set(nextIndex);
+    window.setTimeout(() => this.galleryDirection.set(null), 320);
+  }
+
+  onGalleryPointerDown(event: PointerEvent): void {
+    if ((event.target as HTMLElement).closest('button')) return;
+    this.galleryPointerStartX = event.clientX;
+    (event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+  }
+
+  onGalleryPointerUp(event: PointerEvent): void {
+    if ((event.target as HTMLElement).closest('button')) return;
+    const distance = event.clientX - this.galleryPointerStartX;
+    if (Math.abs(distance) >= 56) this.moveGallery(distance < 0 ? 1 : -1);
   }
 
   initials(name: string): string {
