@@ -29,27 +29,133 @@
       } @else if (current.status === 'upcoming') {
         <div class="notice-card"><div class="notice-icon">◷</div><div><h2>Voting opens soon.</h2><p>Come back on {{ current.starts_at | date:'MMM d, y · h:mm a' }} to cast your ballot.</p></div></div>
       } @else {
-        <div class="ballot-layout">
-          <div class="ballot-main">
-            <div class="ballot-section-title"><div><span class="section-count">01</span><h2>Choose a candidate</h2></div><span>Select one</span></div>
-            <p class="ballot-helper">Take a moment to read each candidate's statement before you decide.</p>
-            <div class="candidate-list" role="radiogroup" aria-label="Choose a candidate">
-              @for (candidate of current.candidates; track candidate.id) {
-                <button type="button" class="candidate-card" role="radio" [attr.aria-checked]="selectedId() === candidate.id" [class.selected]="selectedId() === candidate.id" (click)="selectedId.set(candidate.id); error.set('')">
-                  <span class="candidate-avatar">@if (candidate.photo) {<img [src]="candidate.photo" alt="" loading="lazy" />} @else { {{ initials(candidate.name) }} }</span>
-                  <span class="candidate-content"><strong>{{ candidate.name }}</strong><small>{{ candidate.statement || 'Candidate for this election' }}</small></span>
-                  <span class="selection-ring" aria-hidden="true">{{ selectedId() === candidate.id ? '✓' : '' }}</span>
-                </button>
-              }
+        <div class="ballot-center-wrap">
+          <div class="ballot-section-title"><div><span class="section-count">01</span><h2>Choose a candidate</h2></div><span>Select one</span></div>
+          <p class="ballot-helper">Swipe through the candidates or use the arrows to compare each one.</p>
+
+          @if (current.candidates.length) {
+            <div class="candidate-swipe-shell">
+              <div class="candidate-stage" role="radiogroup" aria-label="Choose a candidate" [class.is-dragging]="isDragging()" (pointerdown)="onPointerDown($event)" (pointermove)="onPointerMove($event)" (pointerup)="onPointerUp($event)" (pointercancel)="onPointerCancel()">
+                @if (previousCandidate(); as prev) {
+                  <article class="candidate-card candidate-card-back candidate-card-left" [class.cycle-right-old]="swipeDirection() === 'right'" [class.cycle-left-new]="swipeDirection() === 'left'" aria-hidden="true">
+                    <div class="candidate-photo" [style.background]="'linear-gradient(135deg, rgba(79,123,255,0.92), rgba(21,38,72,0.82))'">
+                      @if (prev.photo) {<img class="candidate-photo-img" [src]="prev.photo" alt="" loading="lazy" draggable="false" />} @else {<div class="candidate-photo-inner">{{ initials(prev.name) }}</div>}
+                      <div class="candidate-details">
+                        <div class="candidate-info">
+                          <p class="eyebrow">Preview</p>
+                          <h3>{{ prev.name }}</h3>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                }
+
+                @if (currentCandidate(); as candidate) {
+                  <article class="candidate-card candidate-card-main" [style.transform]="dragTransform()" [class.swipe-left]="swipeDirection() === 'left'" [class.swipe-right]="swipeDirection() === 'right'" [class.selected]="selectedId() === candidate.id">
+                    <div class="candidate-photo" [style.background]="'linear-gradient(135deg, rgba(255,173,112,0.8), rgba(66,102,185,0.88))'">
+                      @if (candidate.photo) {<img class="candidate-photo-img" [src]="candidate.photo" [alt]="candidate.name" draggable="false" />} @else {<div class="candidate-photo-inner">{{ initials(candidate.name) || '??' }}</div>}
+
+                      <div class="candidate-details">
+                        <div class="candidate-info">
+                          <p class="eyebrow">Candidate {{ currentIndex() + 1 }} of {{ current.candidates.length }}</p>
+                          <div class="candidate-name-row">
+                            <h3>{{ candidate.name }}</h3>
+                            <button type="button" class="details-toggle" aria-label="See details about this candidate" (click)="openDetails($event)">See details</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button type="button" class="photo-check" aria-label="Confirm candidate" (click)="review()">✓</button>
+                    </div>
+                  </article>
+                }
+
+                @if (nextCandidate(); as next) {
+                  <article class="candidate-card candidate-card-back candidate-card-right" [class.cycle-right-new]="swipeDirection() === 'right'" [class.cycle-left-old]="swipeDirection() === 'left'" aria-hidden="true">
+                    <div class="candidate-photo" [style.background]="'linear-gradient(135deg, rgba(117,222,182,0.82), rgba(27,74,94,0.82))'">
+                      @if (next.photo) {<img class="candidate-photo-img" [src]="next.photo" alt="" loading="lazy" draggable="false" />} @else {<div class="candidate-photo-inner">{{ initials(next.name) }}</div>}
+                      <div class="candidate-details">
+                        <div class="candidate-info">
+                          <p class="eyebrow">Preview</p>
+                          <h3>{{ next.name }}</h3>
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                }
+              </div>
+
+              <div class="swipe-actions">
+                <button type="button" class="nav-button nav-left" (click)="moveSelection(-1)" aria-label="Previous candidate">←</button>
+                <button type="button" class="nav-button nav-right" (click)="moveSelection(1)" aria-label="Next candidate">→</button>
+              </div>
             </div>
-            @if (!current.candidates.length) { <div class="state-card">No candidates have been added yet.</div> }
-            @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
-          </div>
-          <aside class="ballot-aside">
-            <div class="aside-card"><span class="aside-kicker">YOUR BALLOT</span><div class="aside-graphic" aria-hidden="true"><span>✓</span></div><h3>Ready when you are.</h3><p>Your vote is final once confirmed. Please review your choice before submitting.</p><div class="aside-rule"></div><div class="aside-row"><span>Election</span><strong>{{ current.title }}</strong></div><div class="aside-row"><span>Your selection</span><strong>{{ selectedCandidate()?.name || 'Not selected' }}</strong></div>@if (signedIn()) {<button type="button" class="button button-primary button-full" (click)="review()" [disabled]="!current.candidates.length">Review ballot <span aria-hidden="true">↗</span></button>} @else {<a routerLink="/login" [queryParams]="{ returnUrl: '/elections/' + current.id }" class="button button-primary button-full">Sign in to vote <span aria-hidden="true">↗</span></a>}</div>
-            <p class="aside-footnote"><span>▣</span> Only one vote is accepted per voter in this election.</p>
-          </aside>
+          } @else {
+            <div class="state-card">No candidates have been added yet.</div>
+          }
+
+          @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
         </div>
+
+        @if (detailsOpen()) {
+          <div class="candidate-detail-backdrop" role="presentation" (click)="closeDetails()"></div>
+          @if (currentCandidate(); as candidate) {
+            <section class="candidate-detail-panel" [class.is-closing]="detailsClosing()" role="dialog" aria-modal="true" aria-labelledby="candidate-detail-title">
+              <button type="button" class="candidate-detail-close" aria-label="Close candidate details" (click)="closeDetails()">×</button>
+              <div class="candidate-detail-top">
+                <div class="candidate-detail-portrait" [attr.aria-label]="candidate.photo ? null : 'Portrait placeholder'">
+                  @if (candidate.photo) {<img [src]="candidate.photo" [alt]="candidate.name" />} @else {<span>{{ initials(candidate.name) }}</span>}
+                </div>
+                <div class="candidate-detail-copy">
+                  <p class="eyebrow">Candidate profile</p>
+                  <h2 id="candidate-detail-title">{{ candidate.name }}</h2>
+                  <p class="candidate-detail-role">{{ candidate.statement || 'Candidate for this election' }}</p>
+                  <p>Meet {{ candidate.name }}, a thoughtful voice focused on practical progress, shared responsibility, and a stronger future for the community.</p>
+                </div>
+              </div>
+
+              <div class="candidate-detail-story">
+                <p class="eyebrow">More about {{ candidate.name }}</p>
+                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae justo at nibh posuere blandit. Curabitur consequat, arcu at tincidunt porttitor, sem velit volutpat mauris, vitae fermentum lectus libero sed erat.</p>
+                <p>Praesent finibus, neque sed facilisis suscipit, sapien sem malesuada lectus, non consequat arcu felis a lorem. Donec euismod, nisl a tincidunt interdum, justo sapien gravida lectus, sed dignissim neque erat sed nunc.</p>
+                <p>Aliquam erat volutpat. Suspendisse potenti. Vivamus at sem sed arcu porta commodo. Nunc sit amet turpis sed neque ullamcorper gravida, while posuere lacus pellentesque.</p>
+                <p>Fusce laoreet, justo vitae luctus feugiat, nisl magna interdum lorem, sed volutpat eros purus non nibh. Aenean malesuada, eros at efficitur posuere, sapien magna cursus libero, non tincidunt urna lectus vitae mi.</p>
+                <p>Curabitur at magna vel libero feugiat tincidunt. Morbi blandit, sem a vestibulum luctus, lectus urna gravida erat, vitae dictum nibh velit sed lectus. Donec congue est at ipsum fermentum, sed tincidunt justo consequat.</p>
+              </div>
+
+              <div class="candidate-gallery">
+                <div class="candidate-gallery-heading"><p class="eyebrow">Candidate gallery</p><span>03 images</span></div>
+                <div class="candidate-gallery-grid">
+                  <button type="button" class="gallery-placeholder gallery-placeholder-one" aria-label="Open portrait" (click)="$event.stopPropagation(); openGallery(0)"><span>{{ initials(candidate.name) }}</span></button>
+                  <button type="button" class="gallery-placeholder gallery-placeholder-two" aria-label="Open campus event photo" (click)="$event.stopPropagation(); openGallery(1)"><span>01</span></button>
+                  <button type="button" class="gallery-placeholder gallery-placeholder-three" aria-label="Open community work photo" (click)="$event.stopPropagation(); openGallery(2)"><span>02</span></button>
+                </div>
+              </div>
+
+              <div class="candidate-socials">
+                <div class="candidate-gallery-heading"><p class="eyebrow">Stay connected</p><span>Candidate pages</span></div>
+                <div class="candidate-social-grid">
+                  <a class="candidate-social-link" href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram candidate updates"><span class="social-mark">◎</span><span><strong>Instagram</strong><small>Candidate updates</small></span><span class="social-arrow">↗</span></a>
+                  <a class="candidate-social-link" href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook event page"><span class="social-mark">f</span><span><strong>Facebook</strong><small>Event page</small></span><span class="social-arrow">↗</span></a>
+                  <a class="candidate-social-link" href="https://x.com" target="_blank" rel="noreferrer" aria-label="X candidate announcements"><span class="social-mark">x</span><span><strong>X / Twitter</strong><small>Announcements</small></span><span class="social-arrow">↗</span></a>
+                </div>
+              </div>
+            </section>
+          }
+        }
+
+        @if (galleryOpen()) {
+          <div class="gallery-lightbox-backdrop" role="presentation" (click)="closeGallery()"></div>
+          <section class="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Candidate gallery" (pointerdown)="onGalleryPointerDown($event)" (pointerup)="onGalleryPointerUp($event)">
+            <button type="button" class="gallery-lightbox-close" aria-label="Close gallery" (click)="$event.stopPropagation(); closeGallery()">×</button>
+            <button type="button" class="gallery-lightbox-nav gallery-lightbox-prev" aria-label="Previous gallery image" (click)="$event.stopPropagation(); moveGallery(-1)">←</button>
+            <div class="gallery-lightbox-image" [class.gallery-placeholder-one]="galleryIndex() === 0" [class.gallery-placeholder-two]="galleryIndex() === 1" [class.gallery-placeholder-three]="galleryIndex() === 2" [class.gallery-slide-next]="galleryDirection() === 'next'" [class.gallery-slide-previous]="galleryDirection() === 'previous'">
+              <span>{{ galleryIndex() + 1 }}</span>
+            </div>
+            <button type="button" class="gallery-lightbox-nav gallery-lightbox-next" aria-label="Next gallery image" (click)="$event.stopPropagation(); moveGallery(1)">→</button>
+            <p>{{ gallerySlides[galleryIndex()] }} · {{ galleryIndex() + 1 }} of {{ gallerySlides.length }}</p>
+          </section>
+        }
       }
     }
 
