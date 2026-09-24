@@ -20,7 +20,7 @@ if (!existsSync(join(dist, 'index.html'))) {
 
 createServer((incoming, outgoing) => {
   const pathname = new URL(incoming.url || '/', 'http://localhost').pathname;
-  if (pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/') || pathname.startsWith('/media/')) {
     const upstream = proxyRequest(
       {
         ...backend,

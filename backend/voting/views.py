@@ -10,7 +10,7 @@ from .services import cast_vote
 
 
 class ElectionViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Election.objects.filter(is_published=True).prefetch_related("candidates")
+    queryset = Election.objects.filter(is_published=True).prefetch_related("candidates__gallery", "candidates__links")
     serializer_class = ElectionSerializer
 
     @action(detail=True, methods=["post"])

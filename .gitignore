@@ -3,6 +3,7 @@ __pycache__/
 .venv/
 .env
 db.sqlite3
+backend/media/
 *.sqlite3
 node_modules/
 dist/

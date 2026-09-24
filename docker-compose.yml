@@ -6,11 +6,18 @@ services:
       - ./backend/.env
     ports:
       - "8000:8000"
+    volumes:
+      - media:/app/media
 
   frontend:
     build: ./frontend
     restart: unless-stopped
     depends_on:
       - backend
+    volumes:
+      - media:/usr/share/nginx/media:ro
     ports:
       - "4200:80"
+
+volumes:
+  media:
