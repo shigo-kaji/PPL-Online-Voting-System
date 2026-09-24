@@ -27,7 +27,7 @@ jobs:
   # Runs for every PR into dev or main, and for every push to dev or
   # main. Never pushes an image or deploys anything.
   # ---------------------------------------------------------------------
-  frontend-checks:
+   frontend-checks:
     name: Frontend Lint + Test + Build
     runs-on: ubuntu-latest
     defaults:
@@ -35,17 +35,25 @@ jobs:
         working-directory: frontend
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+
       - name: Install dependencies
         run: npm ci
+
+      - name: Migrate Angular dependency injection
+        run: npx ng generate @angular/core:inject --skip-tests
+
       - name: npm run lint
         run: npm run lint
+
       - name: Run unit tests
         run: npm test
+
       - name: Build
         run: npm run build
 
