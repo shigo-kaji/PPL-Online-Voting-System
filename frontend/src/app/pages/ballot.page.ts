@@ -50,7 +50,8 @@ export class BallotPage implements OnInit {
   readonly galleryOpen = signal(false);
   readonly galleryIndex = signal(0);
   readonly galleryDirection = signal<'next' | 'previous' | null>(null);
-  readonly gallerySlides = ['Portrait', 'Campus event', 'Community work'];
+  readonly gallerySlides = computed(() => this.currentCandidate()?.gallery ?? []);
+  readonly bioParagraphs = computed(() => (this.currentCandidate()?.bio ?? '').split(/\n\s*\n/).map(part => part.trim()).filter(Boolean));
   private galleryPointerStartX = 0;
   readonly success = signal(false);
   readonly error = signal('');
@@ -156,8 +157,10 @@ export class BallotPage implements OnInit {
   }
 
   moveGallery(step: number): void {
+    const count = this.gallerySlides().length;
+    if (count < 2) return;
     this.galleryDirection.set(step > 0 ? 'next' : 'previous');
-    const nextIndex = (this.galleryIndex() + step + this.gallerySlides.length) % this.gallerySlides.length;
+    const nextIndex = (this.galleryIndex() + step + count) % count;
     this.galleryIndex.set(nextIndex);
     window.setTimeout(() => this.galleryDirection.set(null), 320);
   }
@@ -172,6 +175,11 @@ export class BallotPage implements OnInit {
     if ((event.target as HTMLElement).closest('button')) return;
     const distance = event.clientX - this.galleryPointerStartX;
     if (Math.abs(distance) >= 56) this.moveGallery(distance < 0 ? 1 : -1);
+  }
+
+  socialMark(platform: string): string {
+    const marks: Record<string, string> = { instagram: '◎', facebook: 'f', x: 'x', tiktok: '♪', youtube: '▶', linkedin: 'in', website: '⌂' };
+    return marks[platform] ?? '↗';
   }
 
   initials(name: string): string {

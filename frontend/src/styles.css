@@ -1449,6 +1449,16 @@ button:disabled {
   outline-offset: 3px;
 }
 .gallery-placeholder-one { background: linear-gradient(145deg, #4165de, #7f9af5); }
+.gallery-tile {
+  overflow: hidden;
+  background: #dfe8e5;
+}
+.gallery-tile img {
+  width: 100%;
+  height: 100%;
+  min-height: 118px;
+  object-fit: cover;
+}
 .gallery-placeholder-two { background: linear-gradient(145deg, #e49b67, #f1d0a4); }
 .gallery-placeholder-three { background: linear-gradient(145deg, #2e7f7a, #8bd2bc); }
 .gallery-lightbox-backdrop {
@@ -1484,6 +1494,13 @@ button:disabled {
   box-shadow: 0 25px 70px rgba(0, 0, 0, 0.32);
   user-select: none;
   touch-action: pan-y;
+}
+.gallery-lightbox-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 20px;
+  background: rgba(5, 12, 23, 0.6);
 }
 .gallery-lightbox-image.gallery-slide-next {
   animation: gallery-in-from-right 0.32s cubic-bezier(0.22, 1, 0.36, 1);

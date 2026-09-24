@@ -10,6 +10,24 @@ export interface Candidate {
   name: string;
   statement: string;
   photo: string | null;
+  summary: string;
+  bio: string;
+  gallery: CandidateGalleryImage[];
+  links: CandidateLink[];
+}
+
+export interface CandidateGalleryImage {
+  id: number;
+  image: string;
+  caption: string;
+}
+
+export interface CandidateLink {
+  id: number;
+  platform: string;
+  platform_display: string;
+  url: string;
+  label: string;
 }
 
 export type ElectionStatus = 'upcoming' | 'open' | 'closed';

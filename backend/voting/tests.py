@@ -10,7 +10,7 @@ from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from .models import Candidate, Election, Vote
+from .models import Candidate, CandidateGalleryImage, CandidateLink, Election, Vote
 
 
 class VotingApiTests(TestCase):
@@ -49,6 +49,27 @@ class VotingApiTests(TestCase):
         photos = {candidate["name"]: candidate["photo"] for candidate in detail.data["candidates"]}
         self.assertRegex(photos["Alex"], r"^http://testserver/media/candidates/alex.*\.gif$")
         self.assertIsNone(photos["Sam"])
+
+    def test_candidate_profile_gallery_and_links_are_exposed(self):
+        self.alex.summary = "Short intro"
+        self.alex.bio = "First paragraph.\n\nSecond paragraph."
+        self.alex.save()
+        CandidateLink.objects.create(candidate=self.alex, platform="x", url="https://x.com/alex", label="News", order=2)
+        CandidateLink.objects.create(candidate=self.alex, platform="instagram", url="https://instagram.com/alex", order=1)
+        with tempfile.TemporaryDirectory() as media_root, override_settings(MEDIA_ROOT=media_root):
+            CandidateGalleryImage.objects.create(
+                candidate=self.alex, caption="Rally", image=SimpleUploadedFile("rally.gif", b"GIF89a", content_type="image/gif"),
+            )
+            detail = self.client.get(f"/api/elections/{self.election.id}/")
+        alex = next(c for c in detail.data["candidates"] if c["name"] == "Alex")
+        self.assertEqual(alex["summary"], "Short intro")
+        self.assertEqual(alex["bio"], "First paragraph.\n\nSecond paragraph.")
+        self.assertEqual([link["platform"] for link in alex["links"]], ["instagram", "x"])
+        self.assertEqual(alex["links"][1]["platform_display"], "X / Twitter")
+        self.assertEqual(alex["gallery"][0]["caption"], "Rally")
+        self.assertRegex(alex["gallery"][0]["image"], r"^http://testserver/media/candidates/gallery/rally.*\.gif$")
+        sam = next(c for c in detail.data["candidates"] if c["name"] == "Sam")
+        self.assertEqual((sam["gallery"], sam["links"]), ([], []))
 
     def test_second_vote_is_rejected_and_original_remains(self):
         self.client.post(self.vote_url(), {"candidate_id": self.alex.id}, format="json")

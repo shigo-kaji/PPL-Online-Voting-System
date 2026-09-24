@@ -1,11 +1,25 @@
 from django.contrib import admin
 
-from .models import Candidate, Election, Vote
+from .models import Candidate, CandidateGalleryImage, CandidateLink, Election, Vote
 
 
 class CandidateInline(admin.TabularInline):
     model = Candidate
+    fields = ("name", "statement", "photo")
     extra = 2
+    show_change_link = True
+
+
+class CandidateGalleryImageInline(admin.TabularInline):
+    model = CandidateGalleryImage
+    fields = ("image", "caption", "order")
+    extra = 1
+
+
+class CandidateLinkInline(admin.TabularInline):
+    model = CandidateLink
+    fields = ("platform", "url", "label", "order")
+    extra = 1
 
 
 @admin.register(Election)
@@ -20,6 +34,11 @@ class CandidateAdmin(admin.ModelAdmin):
     list_display = ("name", "election", "has_photo")
     list_filter = ("election",)
     search_fields = ("name",)
+    fieldsets = (
+        (None, {"fields": ("election", "name", "statement", "photo")}),
+        ("Profile", {"fields": ("summary", "bio")}),
+    )
+    inlines = (CandidateGalleryImageInline, CandidateLinkInline)
 
     @admin.display(boolean=True, description="Photo")
     def has_photo(self, candidate):

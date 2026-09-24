@@ -110,36 +110,38 @@
                   <p class="eyebrow">Candidate profile</p>
                   <h2 id="candidate-detail-title">{{ candidate.name }}</h2>
                   <p class="candidate-detail-role">{{ candidate.statement || 'Candidate for this election' }}</p>
-                  <p>Meet {{ candidate.name }}, a thoughtful voice focused on practical progress, shared responsibility, and a stronger future for the community.</p>
+                  @if (candidate.summary) { <p>{{ candidate.summary }}</p> }
                 </div>
               </div>
 
-              <div class="candidate-detail-story">
-                <p class="eyebrow">More about {{ candidate.name }}</p>
-                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae justo at nibh posuere blandit. Curabitur consequat, arcu at tincidunt porttitor, sem velit volutpat mauris, vitae fermentum lectus libero sed erat.</p>
-                <p>Praesent finibus, neque sed facilisis suscipit, sapien sem malesuada lectus, non consequat arcu felis a lorem. Donec euismod, nisl a tincidunt interdum, justo sapien gravida lectus, sed dignissim neque erat sed nunc.</p>
-                <p>Aliquam erat volutpat. Suspendisse potenti. Vivamus at sem sed arcu porta commodo. Nunc sit amet turpis sed neque ullamcorper gravida, while posuere lacus pellentesque.</p>
-                <p>Fusce laoreet, justo vitae luctus feugiat, nisl magna interdum lorem, sed volutpat eros purus non nibh. Aenean malesuada, eros at efficitur posuere, sapien magna cursus libero, non tincidunt urna lectus vitae mi.</p>
-                <p>Curabitur at magna vel libero feugiat tincidunt. Morbi blandit, sem a vestibulum luctus, lectus urna gravida erat, vitae dictum nibh velit sed lectus. Donec congue est at ipsum fermentum, sed tincidunt justo consequat.</p>
-              </div>
-
-              <div class="candidate-gallery">
-                <div class="candidate-gallery-heading"><p class="eyebrow">Candidate gallery</p><span>03 images</span></div>
-                <div class="candidate-gallery-grid">
-                  <button type="button" class="gallery-placeholder gallery-placeholder-one" aria-label="Open portrait" (click)="$event.stopPropagation(); openGallery(0)"><span>{{ initials(candidate.name) }}</span></button>
-                  <button type="button" class="gallery-placeholder gallery-placeholder-two" aria-label="Open campus event photo" (click)="$event.stopPropagation(); openGallery(1)"><span>01</span></button>
-                  <button type="button" class="gallery-placeholder gallery-placeholder-three" aria-label="Open community work photo" (click)="$event.stopPropagation(); openGallery(2)"><span>02</span></button>
+              @if (bioParagraphs().length) {
+                <div class="candidate-detail-story">
+                  <p class="eyebrow">More about {{ candidate.name }}</p>
+                  @for (paragraph of bioParagraphs(); track $index) { <p>{{ paragraph }}</p> }
                 </div>
-              </div>
+              }
 
-              <div class="candidate-socials">
-                <div class="candidate-gallery-heading"><p class="eyebrow">Stay connected</p><span>Candidate pages</span></div>
-                <div class="candidate-social-grid">
-                  <a class="candidate-social-link" href="https://instagram.com" target="_blank" rel="noreferrer" aria-label="Instagram candidate updates"><span class="social-mark">◎</span><span><strong>Instagram</strong><small>Candidate updates</small></span><span class="social-arrow">↗</span></a>
-                  <a class="candidate-social-link" href="https://facebook.com" target="_blank" rel="noreferrer" aria-label="Facebook event page"><span class="social-mark">f</span><span><strong>Facebook</strong><small>Event page</small></span><span class="social-arrow">↗</span></a>
-                  <a class="candidate-social-link" href="https://x.com" target="_blank" rel="noreferrer" aria-label="X candidate announcements"><span class="social-mark">x</span><span><strong>X / Twitter</strong><small>Announcements</small></span><span class="social-arrow">↗</span></a>
+              @if (candidate.gallery.length) {
+                <div class="candidate-gallery">
+                  <div class="candidate-gallery-heading"><p class="eyebrow">Candidate gallery</p><span>{{ candidate.gallery.length }} {{ candidate.gallery.length === 1 ? 'image' : 'images' }}</span></div>
+                  <div class="candidate-gallery-grid">
+                    @for (item of candidate.gallery; track item.id; let i = $index) {
+                      <button type="button" class="gallery-placeholder gallery-tile" [class.gallery-placeholder-one]="i === 0" [attr.aria-label]="'Open ' + (item.caption || 'gallery image ' + (i + 1))" (click)="$event.stopPropagation(); openGallery(i)"><img [src]="item.image" [alt]="item.caption" loading="lazy" /></button>
+                    }
+                  </div>
                 </div>
-              </div>
+              }
+
+              @if (candidate.links.length) {
+                <div class="candidate-socials">
+                  <div class="candidate-gallery-heading"><p class="eyebrow">Stay connected</p><span>Candidate pages</span></div>
+                  <div class="candidate-social-grid">
+                    @for (link of candidate.links; track link.id) {
+                      <a class="candidate-social-link" [href]="link.url" target="_blank" rel="noreferrer" [attr.aria-label]="link.platform_display + (link.label ? ' ' + link.label : '')"><span class="social-mark">{{ socialMark(link.platform) }}</span><span><strong>{{ link.platform_display }}</strong><small>{{ link.label || 'Visit page' }}</small></span><span class="social-arrow">↗</span></a>
+                    }
+                  </div>
+                </div>
+              }
             </section>
           }
         }
@@ -149,11 +151,13 @@
           <section class="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Candidate gallery" (pointerdown)="onGalleryPointerDown($event)" (pointerup)="onGalleryPointerUp($event)">
             <button type="button" class="gallery-lightbox-close" aria-label="Close gallery" (click)="$event.stopPropagation(); closeGallery()">×</button>
             <button type="button" class="gallery-lightbox-nav gallery-lightbox-prev" aria-label="Previous gallery image" (click)="$event.stopPropagation(); moveGallery(-1)">←</button>
-            <div class="gallery-lightbox-image" [class.gallery-placeholder-one]="galleryIndex() === 0" [class.gallery-placeholder-two]="galleryIndex() === 1" [class.gallery-placeholder-three]="galleryIndex() === 2" [class.gallery-slide-next]="galleryDirection() === 'next'" [class.gallery-slide-previous]="galleryDirection() === 'previous'">
-              <span>{{ galleryIndex() + 1 }}</span>
-            </div>
-            <button type="button" class="gallery-lightbox-nav gallery-lightbox-next" aria-label="Next gallery image" (click)="$event.stopPropagation(); moveGallery(1)">→</button>
-            <p>{{ gallerySlides[galleryIndex()] }} · {{ galleryIndex() + 1 }} of {{ gallerySlides.length }}</p>
+            @if (gallerySlides()[galleryIndex()]; as slide) {
+              <div class="gallery-lightbox-image" [class.gallery-slide-next]="galleryDirection() === 'next'" [class.gallery-slide-previous]="galleryDirection() === 'previous'">
+                <img [src]="slide.image" [alt]="slide.caption" draggable="false" />
+              </div>
+              <button type="button" class="gallery-lightbox-nav gallery-lightbox-next" aria-label="Next gallery image" (click)="$event.stopPropagation(); moveGallery(1)">→</button>
+              <p>{{ slide.caption ? slide.caption + ' · ' : '' }}{{ galleryIndex() + 1 }} of {{ gallerySlides().length }}</p>
+            }
           </section>
         }
       }
