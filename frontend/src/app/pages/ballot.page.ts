@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, signal, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ApiService, readableError } from '../api.service';
@@ -11,6 +11,10 @@ import { Election } from '../models';
   templateUrl: './ballot.page.html',
 })
 export class BallotPage implements OnInit {
+  private readonly api = inject(ApiService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
   readonly election = signal<Election | null>(null);
   readonly selectedId = signal<number | null>(null);
   readonly currentIndex = signal(0);
@@ -40,7 +44,12 @@ export class BallotPage implements OnInit {
     const nextIndex = (this.currentIndex() + 1) % candidates.length;
     return candidates[nextIndex] ?? null;
   });
-  readonly selectedCandidate = computed(() => this.currentCandidate() ?? this.election()?.candidates.find(candidate => candidate.id === this.selectedId()) ?? null);
+  readonly selectedCandidate = computed(
+    () =>
+      this.currentCandidate() ??
+      this.election()?.candidates.find((candidate) => candidate.id === this.selectedId()) ??
+      null,
+  );
   readonly loading = signal(true);
   readonly signedIn = signal(false);
   readonly submitting = signal(false);
@@ -58,12 +67,6 @@ export class BallotPage implements OnInit {
     const offset = this.dragX();
     return offset ? `translateX(${offset}px) rotate(${offset / 24}deg)` : '';
   });
-
-  constructor(
-    private readonly api: ApiService,
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-  ) {}
 
   async ngOnInit(): Promise<void> {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -157,7 +160,8 @@ export class BallotPage implements OnInit {
 
   moveGallery(step: number): void {
     this.galleryDirection.set(step > 0 ? 'next' : 'previous');
-    const nextIndex = (this.galleryIndex() + step + this.gallerySlides.length) % this.gallerySlides.length;
+    const nextIndex =
+      (this.galleryIndex() + step + this.gallerySlides.length) % this.gallerySlides.length;
     this.galleryIndex.set(nextIndex);
     window.setTimeout(() => this.galleryDirection.set(null), 320);
   }
@@ -175,7 +179,12 @@ export class BallotPage implements OnInit {
   }
 
   initials(name: string): string {
-    return name.split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join('').toUpperCase();
+    return name
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase();
   }
 
   review(): void {

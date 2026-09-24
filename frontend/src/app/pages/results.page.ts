@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { ApiService, readableError } from '../api.service';
@@ -10,16 +10,14 @@ import { Election, ElectionResults } from '../models';
   templateUrl: './results.page.html',
 })
 export class ResultsPage implements OnInit {
+  private readonly api = inject(ApiService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
   readonly election = signal<Election | null>(null);
   readonly results = signal<ElectionResults | null>(null);
   readonly loading = signal(true);
   readonly error = signal('');
-
-  constructor(
-    private readonly api: ApiService,
-    private readonly route: ActivatedRoute,
-    private readonly router: Router,
-  ) {}
 
   async ngOnInit(): Promise<void> {
     const id = Number(this.route.snapshot.paramMap.get('id'));
