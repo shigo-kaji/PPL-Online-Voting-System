@@ -44,6 +44,11 @@ class Candidate(models.Model):
     election = models.ForeignKey(Election, related_name="candidates", on_delete=models.CASCADE)
     name = models.CharField(max_length=120)
     statement = models.TextField(blank=True)
+    photo = models.ImageField(upload_to="candidates/", blank=True)
+    summary = models.TextField(blank=True, help_text="Short introduction shown at the top of the candidate profile.")
+    bio = models.TextField(
+        "More about", blank=True, help_text="Longer profile text. Leave a blank line between paragraphs.",
+    )
 
     class Meta:
         ordering = ["name", "id"]
@@ -55,9 +60,45 @@ class Candidate(models.Model):
         return f"{self.name} ({self.election.title})"
 
 
+class CandidateGalleryImage(models.Model):
+    candidate = models.ForeignKey(Candidate, related_name="gallery", on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="candidates/gallery/")
+    caption = models.CharField(max_length=120, blank=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return self.caption or f"Image #{self.pk}"
+
+
+class CandidateLink(models.Model):
+    class Platform(models.TextChoices):
+        INSTAGRAM = "instagram", "Instagram"
+        FACEBOOK = "facebook", "Facebook"
+        X = "x", "X / Twitter"
+        TIKTOK = "tiktok", "TikTok"
+        YOUTUBE = "youtube", "YouTube"
+        LINKEDIN = "linkedin", "LinkedIn"
+        WEBSITE = "website", "Website"
+
+    candidate = models.ForeignKey(Candidate, related_name="links", on_delete=models.CASCADE)
+    platform = models.CharField(max_length=20, choices=Platform.choices)
+    url = models.URLField("URL")
+    label = models.CharField(max_length=60, blank=True, help_text='Short subtitle, e.g. "Campaign updates".')
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["order", "id"]
+
+    def __str__(self):
+        return f"{self.get_platform_display()}: {self.url}"
+
+
 class Vote(models.Model):
-    election = models.ForeignKey(Election, related_name="votes", on_delete=models.PROTECT)
-    candidate = models.ForeignKey(Candidate, related_name="votes", on_delete=models.PROTECT)
+    election = models.ForeignKey(Election, related_name="votes", on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, related_name="votes", on_delete=models.CASCADE)
     voter = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="votes", on_delete=models.PROTECT)
     cast_at = models.DateTimeField(auto_now_add=True)
 
