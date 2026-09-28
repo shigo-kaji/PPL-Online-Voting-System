@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from .auth_views import csrf_token_view, login_view, logout_view, me_view, register_view
+from .auth_views import csrf_token_view, login_view, logout_view, me_view, register_view, update_account_view
 from .views import ElectionViewSet
 
 router = DefaultRouter()
@@ -12,6 +12,7 @@ urlpatterns = [
     path("auth/login/", login_view, name="login"),
     path("auth/register/", register_view, name="register"),
     path("auth/logout/", logout_view, name="logout"),
+    path("auth/account/", update_account_view, name="update-account"),
     path("auth/me/", me_view, name="me"),
     path("", include(router.urls)),
 ]

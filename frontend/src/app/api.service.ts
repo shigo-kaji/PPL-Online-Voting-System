@@ -61,6 +61,18 @@ export class ApiService {
     this.csrfToken = '';
   }
 
+  async updateAccount(username: string, currentPassword: string, newPassword: string): Promise<void> {
+    await this.refreshCsrf();
+    await firstValueFrom(
+      this.http.post(
+        '/api/auth/account/',
+        { username, currentPassword, newPassword },
+        { headers: this.csrfHeaders() },
+      ),
+    );
+    await this.refreshSession();
+  }
+
   listElections(): Promise<Election[]> {
     return firstValueFrom(this.http.get<Election[]>('/api/elections/'));
   }

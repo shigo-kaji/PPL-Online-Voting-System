@@ -85,10 +85,12 @@
                 }
               </div>
 
-              <div class="swipe-actions">
-                <button type="button" class="nav-button nav-left" (click)="moveSelection(-1)" aria-label="Previous candidate">←</button>
-                <button type="button" class="nav-button nav-right" (click)="moveSelection(1)" aria-label="Next candidate">→</button>
-              </div>
+              @if (current.candidates.length > 1) {
+                <div class="swipe-actions">
+                  <button type="button" class="nav-button nav-left" (click)="moveSelection(-1)" aria-label="Previous candidate"><lucide-icon [img]="ChevronsLeft" class="preview-icon" aria-hidden="true" /></button>
+                  <button type="button" class="nav-button nav-right" (click)="moveSelection(1)" aria-label="Next candidate"><lucide-icon [img]="ChevronsRight" class="preview-icon" aria-hidden="true" /></button>
+                </div>
+              }
             </div>
           } @else {
             <div class="state-card">No candidates have been added yet.</div>
@@ -101,7 +103,7 @@
           <div class="candidate-detail-backdrop" role="presentation" (click)="closeDetails()"></div>
           @if (currentCandidate(); as candidate) {
             <section class="candidate-detail-panel" [class.is-closing]="detailsClosing()" role="dialog" aria-modal="true" aria-labelledby="candidate-detail-title">
-              <button type="button" class="candidate-detail-close" aria-label="Close candidate details" (click)="closeDetails()">×</button>
+              <button type="button" class="candidate-detail-close" aria-label="Close candidate details" (click)="closeDetails()"><lucide-icon [img]="X" class="preview-icon" aria-hidden="true" /></button>
               <div class="candidate-detail-top">
                 <div class="candidate-detail-portrait" [attr.aria-label]="candidate.photo ? null : 'Portrait placeholder'">
                   @if (candidate.photo) {<img [src]="candidate.photo" [alt]="candidate.name" />} @else {<span>{{ initials(candidate.name) }}</span>}
@@ -126,7 +128,7 @@
                   <div class="candidate-gallery-heading"><p class="eyebrow">Candidate gallery</p><span>{{ candidate.gallery.length }} {{ candidate.gallery.length === 1 ? 'image' : 'images' }}</span></div>
                   <div class="candidate-gallery-grid">
                     @for (item of candidate.gallery; track item.id; let i = $index) {
-                      <button type="button" class="gallery-placeholder gallery-tile" [class.gallery-placeholder-one]="i === 0" [attr.aria-label]="'Open ' + (item.caption || 'gallery image ' + (i + 1))" (click)="$event.stopPropagation(); openGallery(i)"><img [src]="item.image" [alt]="item.caption" loading="lazy" /></button>
+                      <button type="button" class="gallery-placeholder gallery-tile" [class.gallery-placeholder-one]="i === 0" [attr.aria-label]="'Open ' + (item.caption || 'gallery image ' + (i + 1))" (click)="$event.stopPropagation(); openGallery(i)"><img [src]="item.image" [alt]="item.caption" loading="lazy" /><span class="gallery-expand-icon" aria-hidden="true"><lucide-icon [img]="Maximize" class="preview-icon" /></span></button>
                     }
                   </div>
                 </div>
@@ -148,14 +150,14 @@
 
         @if (galleryOpen()) {
           <div class="gallery-lightbox-backdrop" role="presentation" (click)="closeGallery()"></div>
-          <section class="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Candidate gallery" (pointerdown)="onGalleryPointerDown($event)" (pointerup)="onGalleryPointerUp($event)">
-            <button type="button" class="gallery-lightbox-close" aria-label="Close gallery" (click)="$event.stopPropagation(); closeGallery()">×</button>
-            <button type="button" class="gallery-lightbox-nav gallery-lightbox-prev" aria-label="Previous gallery image" (click)="$event.stopPropagation(); moveGallery(-1)">←</button>
+          <section class="gallery-lightbox" [class.is-single-image]="gallerySlides().length === 1" role="dialog" aria-modal="true" aria-label="Candidate gallery" (pointerdown)="onGalleryPointerDown($event)" (pointerup)="onGalleryPointerUp($event)">
+            @if (gallerySlides().length > 1) { <button type="button" class="gallery-lightbox-nav gallery-lightbox-prev" aria-label="Previous gallery image" (click)="$event.stopPropagation(); moveGallery(-1)"><lucide-icon [img]="ChevronsLeft" class="preview-icon" aria-hidden="true" /></button> }
             @if (gallerySlides()[galleryIndex()]; as slide) {
               <div class="gallery-lightbox-image" [class.gallery-slide-next]="galleryDirection() === 'next'" [class.gallery-slide-previous]="galleryDirection() === 'previous'">
+                <button type="button" class="gallery-lightbox-close" aria-label="Close gallery" (click)="$event.stopPropagation(); closeGallery()"><lucide-icon [img]="X" class="preview-icon" aria-hidden="true" /></button>
                 <img [src]="slide.image" [alt]="slide.caption" draggable="false" />
               </div>
-              <button type="button" class="gallery-lightbox-nav gallery-lightbox-next" aria-label="Next gallery image" (click)="$event.stopPropagation(); moveGallery(1)">→</button>
+              @if (gallerySlides().length > 1) { <button type="button" class="gallery-lightbox-nav gallery-lightbox-next" aria-label="Next gallery image" (click)="$event.stopPropagation(); moveGallery(1)"><lucide-icon [img]="ChevronsRight" class="preview-icon" aria-hidden="true" /></button> }
               <p>{{ slide.caption ? slide.caption + ' · ' : '' }}{{ galleryIndex() + 1 }} of {{ gallerySlides().length }}</p>
             }
           </section>

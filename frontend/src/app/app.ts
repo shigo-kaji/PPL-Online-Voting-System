@@ -15,6 +15,7 @@ export class App implements OnInit {
 
   readonly signOutError = signal('');
   readonly currentUrl = signal('/');
+  readonly accountMenuOpen = signal(false);
 
   ngOnInit(): void {
     this.currentUrl.set(this.router.url);
@@ -32,7 +33,21 @@ export class App implements OnInit {
       : { returnUrl: url };
   }
 
+  navActive(fragment: string): boolean {
+    const url = this.currentUrl();
+    return url.includes(`#${fragment}`) || (fragment === 'elections' && url === '/');
+  }
+
+  toggleAccountMenu(): void {
+    this.accountMenuOpen.update((open) => !open);
+  }
+
+  closeAccountMenu(): void {
+    this.accountMenuOpen.set(false);
+  }
+
   async signOut(): Promise<void> {
+    this.closeAccountMenu();
     this.signOutError.set('');
     try {
       await this.api.logout();

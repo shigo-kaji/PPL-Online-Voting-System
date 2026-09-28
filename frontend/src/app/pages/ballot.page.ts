@@ -1,16 +1,21 @@
 import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, signal, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ChevronsLeft, ChevronsRight, LucideAngularModule, Maximize, X } from 'lucide-angular';
 
 import { ApiService, readableError } from '../api.service';
 import { Election } from '../models';
 
 @Component({
   selector: 'app-ballot-page',
-  imports: [DatePipe, RouterLink],
+  imports: [DatePipe, RouterLink, LucideAngularModule],
   templateUrl: './ballot.page.html',
 })
 export class BallotPage implements OnInit {
+  readonly ChevronsLeft = ChevronsLeft;
+  readonly ChevronsRight = ChevronsRight;
+  readonly Maximize = Maximize;
+  readonly X = X;
   private readonly api = inject(ApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);

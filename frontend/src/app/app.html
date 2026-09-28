@@ -6,12 +6,19 @@
     </a>
     <nav class="header-nav" aria-label="Main navigation">
       <a routerLink="/" fragment="elections" class="nav-link">Elections</a>
-      <a routerLink="/" fragment="how-it-works" class="nav-link nav-secondary">How it works</a>
+      <a routerLink="/" fragment="how-it-works" class="nav-link nav-secondary">How It Works</a>
     </nav>
     <div class="header-actions">
       @if (api.currentUser()?.authenticated) {
-        <span class="account-chip"><span class="account-dot"></span>{{ api.currentUser()?.username }}</span>
-        <button type="button" class="text-button" (click)="signOut()">Sign out</button>
+        <div class="account-menu">
+          <button type="button" class="account-menu-trigger account-chip" aria-haspopup="menu" [attr.aria-expanded]="accountMenuOpen()" (click)="toggleAccountMenu()"><span class="account-dot" aria-label="Online"></span><span>{{ api.currentUser()?.username }}</span></button>
+          @if (accountMenuOpen()) {
+            <div class="account-menu-panel" role="menu">
+              <a routerLink="/account" role="menuitem" (click)="closeAccountMenu()">Edit Account</a>
+              <button type="button" role="menuitem" (click)="signOut()">Sign Out</button>
+            </div>
+          }
+        </div>
       } @else {
         <a routerLink="/signup" [queryParams]="returnParams()" class="text-button">Sign up</a>
         <a routerLink="/login" [queryParams]="returnParams()" class="button button-small button-dark">Voter sign in <span aria-hidden="true">↗</span></a>

@@ -1,6 +1,6 @@
 import json
 
-from django.contrib.auth import authenticate, get_user_model, login, logout
+from django.contrib.auth import authenticate, get_user_model, login, logout, update_session_auth_hash
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.http import JsonResponse
@@ -78,6 +78,46 @@ def register_view(request):
 def logout_view(request):
     logout(request)
     return JsonResponse({"detail": "Signed out."})
+
+
+@require_POST
+@csrf_protect
+def update_account_view(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"detail": "You must be signed in to edit your account."}, status=401)
+    try:
+        data = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"detail": "Send a valid JSON body."}, status=400)
+    if not isinstance(data, dict):
+        return JsonResponse({"detail": "Send a JSON object."}, status=400)
+
+    current_password = data.get("currentPassword")
+    username = data.get("username")
+    new_password = data.get("newPassword", "")
+    if not all(isinstance(value, str) for value in (current_password, username, new_password)):
+        return JsonResponse({"detail": "Account details are required."}, status=400)
+    if not authenticate(request, username=request.user.get_username(), password=current_password):
+        return JsonResponse({"detail": "Your current password is incorrect."}, status=400)
+
+    username = username.strip()
+    if len(username) < 3 or len(username) > 150:
+        return JsonResponse({"detail": "Username must be 3 to 150 characters."}, status=400)
+    User = get_user_model()
+    if User.objects.filter(username__iexact=username).exclude(pk=request.user.pk).exists():
+        return JsonResponse({"detail": "That username is already taken."}, status=400)
+    if new_password:
+        try:
+            validate_password(new_password, user=request.user)
+        except ValidationError as exc:
+            return JsonResponse({"detail": exc.messages[0]}, status=400)
+
+    request.user.username = username
+    if new_password:
+        request.user.set_password(new_password)
+    request.user.save()
+    update_session_auth_hash(request, request.user)
+    return JsonResponse({"id": request.user.id, "username": request.user.get_username(), "is_staff": request.user.is_staff})
 
 
 @require_GET

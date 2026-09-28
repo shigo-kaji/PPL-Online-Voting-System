@@ -1,0 +1,39 @@
+<section class="login-page account-page section-wrap">
+  <div class="login-story">
+    <span class="section-count">ACCOUNT</span>
+    <h1>Your account<span class="heading-dot">.</span></h1>
+    <p>Keep your voter credentials current. Changes take effect immediately across your account.</p>
+    <div class="login-quote"><span>“</span><p>Your voice belongs to you.</p></div>
+  </div>
+
+  <div class="login-panel">
+    <div class="login-panel-top"><span class="panel-icon">✳</span><span>ACCOUNT EDITOR</span></div>
+    <h2>Edit credentials<span class="heading-dot">.</span></h2>
+    <p class="panel-intro">Confirm your current password before saving changes.</p>
+
+    @if (saved()) { <div class="form-success" role="status">Your account has been updated.</div> }
+    @if (error()) { <div class="form-error" role="alert">{{ error() }}</div> }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label for="account-username">Username</label>
+      <input id="account-username" type="text" formControlName="username" autocomplete="username" [attr.aria-invalid]="form.controls.username.invalid && form.controls.username.touched" />
+      @if (form.controls.username.invalid && form.controls.username.touched) { <small class="field-error">Username must be at least 3 characters.</small> }
+
+      <label for="current-password">Current password</label>
+      <input id="current-password" type="password" formControlName="currentPassword" autocomplete="current-password" [attr.aria-invalid]="form.controls.currentPassword.invalid && form.controls.currentPassword.touched" />
+      @if (form.controls.currentPassword.invalid && form.controls.currentPassword.touched) { <small class="field-error">Enter your current password.</small> }
+
+      <label for="new-password">New password <span class="optional-label">optional</span></label>
+      <input id="new-password" type="password" formControlName="newPassword" autocomplete="new-password" placeholder="Leave blank to keep it" [attr.aria-invalid]="form.controls.newPassword.invalid && form.controls.newPassword.touched" />
+      @if (form.controls.newPassword.invalid && form.controls.newPassword.touched) { <small class="field-error">New passwords must be at least 8 characters.</small> }
+
+      <label for="confirm-password">Confirm new password</label>
+      <input id="confirm-password" type="password" formControlName="confirmPassword" autocomplete="new-password" [attr.aria-invalid]="form.hasError('mismatch') && form.controls.confirmPassword.touched" />
+      @if (form.hasError('mismatch') && form.controls.confirmPassword.touched) { <small class="field-error">Passwords do not match.</small> }
+
+      <button class="button button-primary button-full" type="submit" [disabled]="submitting()">{{ submitting() ? 'Saving changes…' : 'Save changes' }} <span aria-hidden="true">↗</span></button>
+    </form>
+    <button type="button" class="text-button account-signout" (click)="signOut()">Sign out</button>
+    <div class="form-footnote"><a routerLink="/"><strong>Return to elections</strong></a></div>
+  </div>
+</section>
