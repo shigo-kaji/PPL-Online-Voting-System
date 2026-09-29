@@ -4,8 +4,12 @@ import os
 from pathlib import Path
 from urllib.parse import parse_qs, unquote, urlparse
 
+from dotenv import load_dotenv
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+# Real environment variables (e.g. from docker-compose) take precedence over .env.
+load_dotenv(BASE_DIR / ".env")
 DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() == "true"
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 if not SECRET_KEY:
@@ -91,6 +95,30 @@ USE_TZ = True
 STATIC_URL = "static/"
 MEDIA_URL = "media/"
 MEDIA_ROOT = Path(os.getenv("DJANGO_MEDIA_ROOT", BASE_DIR / "media"))
+
+# Store uploads in Supabase Storage when S3 keys are configured; otherwise use MEDIA_ROOT.
+if os.getenv("SUPABASE_S3_ACCESS_KEY"):
+    # Accept either the bare ref or the full project URL (https://<ref>.supabase.co).
+    SUPABASE_PROJECT_REF = urlparse(os.environ["SUPABASE_PROJECT_REF"]).hostname or os.environ["SUPABASE_PROJECT_REF"]
+    SUPABASE_PROJECT_REF = SUPABASE_PROJECT_REF.strip("/").removesuffix(".supabase.co")
+    SUPABASE_BUCKET = os.getenv("SUPABASE_BUCKET", "media")
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {
+                "bucket_name": SUPABASE_BUCKET,
+                "endpoint_url": f"https://{SUPABASE_PROJECT_REF}.supabase.co/storage/v1/s3",
+                "region_name": os.environ["SUPABASE_REGION"],
+                "access_key": os.environ["SUPABASE_S3_ACCESS_KEY"],
+                "secret_key": os.environ["SUPABASE_S3_SECRET_KEY"],
+                # Public bucket: serve files from Supabase's public URL without signed query strings.
+                "custom_domain": f"{SUPABASE_PROJECT_REF}.supabase.co/storage/v1/object/public/{SUPABASE_BUCKET}",
+                "querystring_auth": False,
+                "file_overwrite": False,
+            },
+        },
+        "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    }
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
