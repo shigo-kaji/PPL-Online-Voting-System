@@ -40,3 +40,20 @@ class ElectionViewSet(viewsets.ReadOnlyModelViewSet):
                 for candidate in candidates
             ],
         })
+
+    @action(detail=True, methods=["get"])
+    def report(self, request, pk=None):
+        from django.http import HttpResponse
+        from .reports import generate_election_report_pdf
+
+        election = self.get_object()
+        
+        # Only allow after the election closes or similar to results
+        if election.status != "closed":
+            raise PermissionDenied("Report is available after the election closes.")
+
+        pdf_buffer = generate_election_report_pdf(election)
+
+        response = HttpResponse(pdf_buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="election_report_{election.id}.pdf"'
+        return response
