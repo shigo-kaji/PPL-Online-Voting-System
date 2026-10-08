@@ -44,4 +44,15 @@ export class ResultsPage implements OnInit {
   percentage(votes: number, total: number): number {
     return total ? Math.round((votes / total) * 100) : 0;
   }
+
+  async downloadReport(): Promise<void> {
+    const election = this.election();
+    if (election) {
+      try {
+        await this.api.downloadReport(election.id);
+      } catch (error) {
+        this.error.set(readableError(error));
+      }
+    }
+  }
 }

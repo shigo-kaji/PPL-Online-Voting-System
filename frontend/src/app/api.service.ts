@@ -86,6 +86,22 @@ export class ApiService {
     return firstValueFrom(this.http.get<ElectionResults>(`/api/elections/${id}/results/`));
   }
 
+  async downloadReport(id: number): Promise<void> {
+    const response = await firstValueFrom(
+      this.http.get(`/api/elections/${id}/report/`, {
+        responseType: 'blob'
+      })
+    );
+    const url = window.URL.createObjectURL(response);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `election_report_${id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  }
+
   private csrfHeaders(): HttpHeaders {
     return new HttpHeaders({ 'X-CSRFToken': this.csrfToken });
   }

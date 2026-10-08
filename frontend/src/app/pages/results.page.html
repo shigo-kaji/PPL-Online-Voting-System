@@ -23,10 +23,13 @@
         <div class="results-card">
           <div class="results-card-heading">
             <h2>The results</h2>
-            <span
-              >{{ tally.total_votes }}
-              {{ tally.total_votes === 1 ? 'vote' : 'votes' }} counted</span
-            >
+            <div style="display: flex; gap: 1rem; align-items: center">
+              <span
+                >{{ tally.total_votes }}
+                {{ tally.total_votes === 1 ? 'vote' : 'votes' }} counted</span
+              >
+              <button (click)="downloadReport()" class="button button-outline" style="padding: 0.5rem 1rem; font-size: 0.875rem">Download Report PDF</button>
+            </div>
           </div>
           @for (candidate of tally.candidates; track candidate.candidate_id) {
             <div class="result-item">
